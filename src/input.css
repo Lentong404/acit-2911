@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/*  bgm  */
+body {
+  font-family: 'Outfit', sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/*  show/hide  */
+.view { display: none; }
+.view.active { display: block; }
+
+/*  Misc  */
+button:disabled { opacity: 0.35; pointer-events: none; }
+
+/*  Card Flip  */
+#flashcard-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+  min-height: 280px;
+}
+.card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Nocturne Ult */
+body.dark {
+  background-color: #1c1917;
+  color: #e7e5e4;
+}
+
+body.dark .bg-white          { background-color: #292524 !important; }
+body.dark .bg-stone-50       { background-color: #1c1917 !important; }
+body.dark .bg-stone-100      { background-color: #292524 !important; }
+body.dark .bg-stone-900      { background-color: #e7e5e4 !important; color: #1c1917 !important; }
+
+body.dark .text-stone-900    { color: #e7e5e4 !important; }
+body.dark .text-stone-800    { color: #d6d3d1 !important; }
+body.dark .text-stone-700    { color: #a8a29e !important; }
+body.dark .text-stone-600    { color: #a8a29e !important; }
+body.dark .text-stone-400    { color: #78716c !important; }
+body.dark .text-stone-300    { color: #57534e !important; }
+body.dark .text-stone-100    { color: #e7e5e4 !important; }
+
+body.dark .border-stone-100  { border-color: #44403c !important; }
+body.dark .border-stone-200  { border-color: #44403c !important; }
+
+body.dark .bg-stone-100.text-stone-600 {
+  background-color: #44403c !important;
+  color: #d6d3d1 !important;
+}
+
+body.dark .shadow-sm,
+body.dark .shadow-2xl        { box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important; }
+
+body.dark #flashcard-inner .card-face:first-child {
+  background-color: #292524 !important;
+  border-color: #44403c !important;
+}
+
+body.dark #flashcard-inner .card-back p,
+body.dark #flashcard-inner .card-back span {
+  color: #1c1917 !important;
+}
+
+body.dark .hover\:bg-stone-100:hover { background-color: #d6d3d1 !important; }
+body.dark .hover\:bg-stone-700:hover { background-color: #d6d3d1 !important; }

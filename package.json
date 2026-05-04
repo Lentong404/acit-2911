@@ -1,0 +1,24 @@
+{
+  "name": "flashcard-app",
+  "version": "1.0.0",
+  "description": "Flashcard CRUD app with Express + Tailwind CSS",
+  "main": "server.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --watch",
+    "dev": "concurrently \"npm run watch:css\" \"node server.js\"",
+    "start": "npm run build:css && node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.0.0",
+    "express": "^5.2.1",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
