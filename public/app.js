@@ -16,7 +16,7 @@ async function api(method, path, body) {
   return res.json();
 }
 
-//  Pop Up 
+//  Pop Up (Toast!)
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
