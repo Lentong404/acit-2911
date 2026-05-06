@@ -10,14 +10,14 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Load & Save helpers ---
+//  Load & Save helpers 
 function loadDecks() {
   if (!fs.existsSync(DATA_FILE)) return getDefaultDecks();
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf-8');
     return JSON.parse(raw);
   } catch {
-    console.warn('Could not read data.json, starting fresh.');
+    console.warn('Could not read data.json');
     return getDefaultDecks();
   }
 }
@@ -71,7 +71,7 @@ function getDefaultDecks() {
 // Load on startup
 let decks = loadDecks();
 
-// --- Deck Routes ---
+// Deck Routes 
 app.get('/api/decks', (req, res) => {
   const deckList = Object.values(decks).map(d => ({
     id: d.id,
@@ -115,7 +115,7 @@ app.delete('/api/decks/:deckId', (req, res) => {
   res.json({ success: true });
 });
 
-// --- Card Routes ---
+//  Card Routes 
 app.get('/api/decks/:deckId/cards', (req, res) => {
   const deck = decks[req.params.deckId];
   if (!deck) return res.status(404).json({ error: 'Deck not found' });
