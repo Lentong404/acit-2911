@@ -1,11 +1,11 @@
-// ── State ──
+//  State 
 let currentDeckId = null, currentCardIndex = 0;
 let editingDeckId = null, editingCardId = null;
 let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
 
-// ── API helper ──
+//  API helper 
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
     method,
@@ -16,7 +16,7 @@ async function api(method, path, body) {
   return res.json();
 }
 
-// ── Pop Up ──
+//  Pop Up 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -25,14 +25,14 @@ function showToast(msg) {
   t._t = setTimeout(() => t.classList.add('hidden'), 2200);
 }
 
-// ── Views ──
+//  Views 
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 function goHome() { showView('home-view'); loadDecks(); }
 
-// ── Home ──
+//  Home 
 async function loadDecks() {
   allDecks = await api('GET', '/decks');
   renderFilters();
@@ -108,7 +108,7 @@ function renderGrid() {
     </div>`).join('');
 }
 
-// ── Deck Modal ──
+//  Deck Modal 
 function openNewDeckModal() {
   editingDeckId = null;
   document.getElementById('deck-modal-title').textContent = 'New Deck';
@@ -151,7 +151,7 @@ async function deleteDeck(id) {
   loadDecks();
 }
 
-// ── Study ──
+//  Study 
 async function openDeck(deckId) {
   currentDeckId = deckId;
   currentCardIndex = 0;
@@ -191,7 +191,7 @@ function flipCard() {
 function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } }
 function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); } }
 
-// ── Card Modal ──
+//  Card Modal 
 function openAddCardModal() {
   editingCardId = null;
   document.getElementById('card-modal-title').textContent = 'Add Card';
@@ -242,7 +242,7 @@ async function deleteCurrentCard() {
   renderStudyView();
 }
 
-// ── Modal helpers ──
+//  Modal helpers 
 function openModal(id) {
   document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none');
   const box = document.getElementById(id.replace('modal', 'modal-box'));
@@ -254,7 +254,7 @@ function closeModal(id) {
   if (box) box.classList.add('translate-y-4');
 }
 
-// ── Keyboard shortcuts ──
+//  Keyboard shortcuts 
 document.addEventListener('keydown', e => {
   if (!document.getElementById('study-view').classList.contains('active')) return;
   if (!document.getElementById('deck-modal').classList.contains('pointer-events-none') ||
@@ -274,7 +274,7 @@ document.getElementById('deck-title-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveDeck();
 });
 
-// ── Dark mode ──
+//  Dark mode 
 function toggleDark() {
   const isDark = document.body.classList.toggle('dark');
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
@@ -285,10 +285,10 @@ function toggleDark() {
 }
 if (localStorage.getItem('theme') === 'dark') toggleDark();
 
-// ── Utility ──
+//  Utility 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Init ──
+//  Init 
 loadDecks();
