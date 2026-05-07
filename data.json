@@ -6,8 +6,8 @@
     "cards": [
       {
         "id": "card-1",
-        "question": "What is a closure in JavaScript?",
-        "answer": "A closure is a function that has access to variables in its outer scope, even after the outer function has returned."
+        "question": "Updated Question",
+        "answer": "Updated Answer"
       },
       {
         "id": "card-2",
@@ -83,6 +83,21 @@
         "id": "card-dd80beb5-c86d-4b98-8acd-c300874bcfc7",
         "question": "1+1",
         "answer": "2"
+      },
+      {
+        "id": "card-6635be93-354c-4f81-a2d3-fa10e8034793",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-7c74af36-d0a6-425b-8bbf-07f6a9b359a1",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-3122db78-7960-4b9c-a44a-1c6a14830b38",
+        "question": "1+1",
+        "answer": "2"
       }
     ]
   },
@@ -155,42 +170,6 @@
     "category": "Programming, Languages",
     "cards": []
   },
-  "deck-a9088ba0-3dde-4288-abdb-a176cc0cc360": {
-    "id": "deck-a9088ba0-3dde-4288-abdb-a176cc0cc360",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-f1d1c25d-72a2-4ec6-989b-ee6cd04e70d9": {
-    "id": "deck-f1d1c25d-72a2-4ec6-989b-ee6cd04e70d9",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-0d48033c-395d-4677-a0b3-e5ffada5c3c7": {
-    "id": "deck-0d48033c-395d-4677-a0b3-e5ffada5c3c7",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-c86c95c1-c51e-4833-ad13-3d5d42aaa042": {
-    "id": "deck-c86c95c1-c51e-4833-ad13-3d5d42aaa042",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-1da131aa-1e0f-4a2a-a344-686b78e5385f": {
-    "id": "deck-1da131aa-1e0f-4a2a-a344-686b78e5385f",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-58f84538-ca90-4af5-a56d-eca8320511ef": {
-    "id": "deck-58f84538-ca90-4af5-a56d-eca8320511ef",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
   "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0": {
     "id": "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0",
     "title": "<script>alert('Hi')</script>",
@@ -203,12 +182,6 @@
       }
     ]
   },
-  "deck-45e37c53-0428-4033-b760-ddbae837f52c": {
-    "id": "deck-45e37c53-0428-4033-b760-ddbae837f52c",
-    "title": "t",
-    "category": "",
-    "cards": []
-  },
   "deck-cb70aa9e-0a52-4147-b182-f49a8886805c": {
     "id": "deck-cb70aa9e-0a52-4147-b182-f49a8886805c",
     "title": "[]",
@@ -219,65 +192,6 @@
     "id": "deck-291e48e0-37e4-4d27-9b2c-3ef1de2b0957",
     "title": "tomatoes",
     "category": "",
-    "cards": []
-  },
-  "deck-636d05a2-1054-44cc-88db-05eac4370bac": {
-    "id": "deck-636d05a2-1054-44cc-88db-05eac4370bac",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-7fc856cd-1a5e-4840-9a50-6e0fa3b8deb9": {
-    "id": "deck-7fc856cd-1a5e-4840-9a50-6e0fa3b8deb9",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-928d024d-dd01-4811-b06a-7d101bf05721": {
-    "id": "deck-928d024d-dd01-4811-b06a-7d101bf05721",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-a98ca1c2-fdfc-4b4f-8bd8-e135eab3f571": {
-    "id": "deck-a98ca1c2-fdfc-4b4f-8bd8-e135eab3f571",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-9109fa83-2881-442a-986b-dfd3f9a3ee5d": {
-    "id": "deck-9109fa83-2881-442a-986b-dfd3f9a3ee5d",
-    "title": "lissa's cards",
-    "category": "Languages",
-    "cards": [
-      {
-        "id": "card-42a5fa90-42bb-4bd2-a449-22618e855ab6",
-        "question": "what is lissa's favourite language?",
-        "answer": "Danish!"
-      },
-      {
-        "id": "card-526a198e-5a63-4a5e-acb8-d878933d5b03",
-        "question": "what is lissa's favourite snack?",
-        "answer": "Danish!"
-      }
-    ]
-  },
-  "deck-4b486ccf-2bb2-4e7c-b0c6-e1d23d58bf94": {
-    "id": "deck-4b486ccf-2bb2-4e7c-b0c6-e1d23d58bf94",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-cd59619d-b0a0-42f6-b1fb-7f79845bc307": {
-    "id": "deck-cd59619d-b0a0-42f6-b1fb-7f79845bc307",
-    "title": "Science",
-    "category": "STEM",
-    "cards": []
-  },
-  "deck-0280c6b1-c975-4c61-b44b-4f22886316ea": {
-    "id": "deck-0280c6b1-c975-4c61-b44b-4f22886316ea",
-    "title": "Science",
-    "category": "STEM",
     "cards": []
   }
 }

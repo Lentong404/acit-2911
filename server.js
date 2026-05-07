@@ -7,9 +7,6 @@ import process from 'process';
 import DOMPurify from 'isomorphic-dompurify';
 
 
-
-
-// Fix for __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -96,17 +93,17 @@ app.get('/api/decks', (req, res) => {
 app.post('/api/decks', (req, res) => {
   const { title, category } = req.body;
 
-  // 1. Check if the raw input exists
+  //  Check if the raw input exists
   if (!title || !title.trim()) {
     return res.status(400).json({ error: 'Title is required' });
   }
 
-  // 2. Sanitize the inputs
+  //  Sanitize the inputs
   // This strips out <script>, <iframe>, and malicious attributes like 'onerror'
   const cleanTitle = DOMPurify.sanitize(title.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
   const cleanCategory = DOMPurify.sanitize((category || '').trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
 
-  // 3. Optional: Check if sanitization stripped EVERYTHING 
+  // Optional: Check if sanitization stripped EVERYTHING 
   // (e.g., if the user submitted ONLY a <script> tag)
   if (!cleanTitle) {
     return res.status(400).json({ error: 'Invalid title content' });
@@ -114,7 +111,7 @@ app.post('/api/decks', (req, res) => {
 
   const id = 'deck-' + uuidv4();
   
-  // 4. Save the cleaned versions
+  //  Save the cleaned versions
   decks[id] = { 
     id, 
     title: cleanTitle, 
@@ -164,7 +161,7 @@ app.post('/api/decks/:deckId/cards', (req, res) => {
   const { question, answer } = req.body;
   if (!question || !answer) return res.status(400).json({ error: 'Question and answer required' });
 
-  // 1. Sanitize the inputs before they touch your data object
+  //  Sanitize the inputs before they touch data object
   const cleanQuestion = DOMPurify.sanitize(question.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
   const cleanAnswer = DOMPurify.sanitize(answer.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
 
@@ -173,7 +170,7 @@ app.post('/api/decks/:deckId/cards', (req, res) => {
   }
 
 
-  // 2. Use the cleaned versions for the new card
+  //  Use the cleaned versions for the new card
   const card = { 
     id: 'card-' + uuidv4(), 
     question: cleanQuestion, 

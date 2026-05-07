@@ -36,10 +36,10 @@ describe("Security Sanitization", () => {
     it("strips <iframe> tags used for clickjacking", () => {
       const dirty = 'Check this: <iframe src="http://malicious.com"></iframe>';
       
-      // We must explicitly forbid iframes as they are sometimes allowed by default
+      // explicitly forbid iframes
       const clean = DOMPurify.sanitize(dirty, { FORBID_TAGS: ['iframe'] });
       
-      // Use trim() because DOMPurify often leaves a trailing space
+      // trim() because DOMPurify often leaves a trailing space
       assert.equal(clean.trim(), "Check this:");
       assert.ok(!clean.includes("<iframe"), "Should not contain iframe tags");
     });
@@ -47,11 +47,18 @@ describe("Security Sanitization", () => {
     it("removes <style> blocks that could break the UI", () => {
       const dirty = "Title <style>body { display: none; }</style>";
       
-      // Explicitly forbid style tags to ensure the entire block is removed
+      //  forbid style tags 
       const clean = DOMPurify.sanitize(dirty, { FORBID_TAGS: ['style', 'script', 'iframe'] });
       
       assert.ok(!clean.includes("<style"), "Should remove style blocks");
       assert.equal(clean.trim(), "Title");
+    });
+    it("removes <style> blocks", () => {
+        const dirty = "Title <style>body{color:red}</style>";
+        const clean = DOMPurify.sanitize(dirty, { FORBID_TAGS: ['style', 'script', 'iframe'] });
+        
+        assert.ok(!clean.includes("<style"));
+        assert.equal(clean.trim(), "Title");
     });
     });
 

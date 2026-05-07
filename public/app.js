@@ -5,7 +5,11 @@ let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
 
-
+// prevents crash on loading decks
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 //  API helper 
 async function api(method, path, body) {

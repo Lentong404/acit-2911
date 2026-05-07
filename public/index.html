@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-white text-stone-900 min-h-screen">
+
+  <!-- HOME VIEW -->
+  <div id="home-view" class="view active max-w-5xl mx-auto px-8 py-10">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-2">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">My Flashcard Decks</h1>
+        <p class="text-stone-400 text-sm mt-1">Select a deck to start studying</p>
+      </div>
+      <div class="flex flex-col items-end gap-2 mt-1">
+        <button onclick="openNewDeckModal()"
+          class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Deck
+        </button>
+        <button onclick="toggleDark()" id="dark-toggle"
+          class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
+          <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span id="dark-label">Dark mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div id="filter-pills" class="flex flex-wrap gap-2 mb-8 mt-6"></div>
+
+    <!-- Deck Grid -->
+    <div id="deck-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </div>
+
+  <!-- Home Page -->
+  <div id="study-view" class="view max-w-2xl mx-auto px-6 py-12">
+    <button onclick="goHome()" class="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-6 font-medium">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      All Decks
+    </button>
+
+    <h1 id="study-title" class="text-4xl text-center tracking-tight mb-1" style="font-family:'Playfair Display',serif"></h1>
+    <p id="card-counter" class="text-center text-sm text-stone-400 mb-6"></p>
+
+    <div class="h-1 bg-stone-100 rounded-full mb-8 overflow-hidden">
+      <div id="progress-fill" class="h-full bg-stone-800 rounded-full transition-all duration-300" style="width:0%"></div>
+    </div>
+
+    <div id="study-content">
+      <!-- Flashcard -->
+      <div class="relative mb-6 cursor-pointer" style="perspective:1200px" onclick="flipCard()">
+        <div id="flashcard-inner" class="relative w-full">
+          <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+            <p id="card-question" class="text-xl leading-relaxed text-stone-800"></p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
+          </div>
+          <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+            <p id="card-answer" class="text-xl leading-relaxed text-stone-100"></p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
+          </div>
+          <div class="invisible px-12 py-10" style="min-height:280px"></div>
+        </div>
+      </div>
+
+      <!-- Edit / Delete -->
+      <div class="flex justify-center gap-3 mb-8">
+        <button onclick="openEditCardModal()"
+          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-stone-200 bg-white hover:border-stone-400 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button onclick="deleteCurrentCard()"
+          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-transparent text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Delete
+        </button>
+      </div>
+
+      <!-- Prev / Add / Next -->
+      <div class="flex justify-center items-center gap-3">
+        <button id="prev-btn" onclick="prevCard()"
+          class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Previous
+        </button>
+        <button onclick="openAddCardModal()"
+          class="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Card
+        </button>
+        <button id="next-btn" onclick="nextCard()"
+          class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+          Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="no-cards" class="hidden text-center py-24">
+      <p class="text-stone-400 mb-4 text-sm">No cards in this deck yet.</p>
+      <button onclick="openAddCardModal()"
+        class="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add First Card
+      </button>
+    </div>
+  </div>
+
+  <!-- New / Edit Deck -->
+  <div id="deck-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="deck-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="deck-modal-title" class="text-2xl font-bold">New Deck</h2>
+        <button onclick="closeDeckModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-2">Deck Title</label>
+        <input id="deck-title-input" type="text" placeholder="e.g. JavaScript Basics"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-semibold mb-2">Category <span class="font-normal text-stone-400">(optional)</span></label>
+        <input id="deck-category-input" type="text" placeholder="e.g. Programming, Languages…"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+      </div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeDeckModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
+        <button onclick="saveDeck()" class="px-4 py-2 text-sm font-semibold rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Card -->
+  <div id="card-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="card-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="card-modal-title" class="text-2xl font-bold">Add Card</h2>
+        <button onclick="closeCardModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-2">Question</label>
+        <textarea id="card-question-input" placeholder="Enter your question..."
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-y min-h-[5rem]"></textarea>
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-semibold mb-2">Answer</label>
+        <textarea id="card-answer-input" placeholder="Enter the answer..."
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-y min-h-[5rem]"></textarea>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeCardModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
+        <button onclick="saveCard()" class="px-4 py-2 text-sm font-semibold rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pop up (it's called toast apparently) -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-lg z-50 hidden whitespace-nowrap"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

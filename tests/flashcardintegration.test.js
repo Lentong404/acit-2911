@@ -76,6 +76,25 @@ describe("Flashcard API Integration", () => {
     });
   });
 
+  // -------------------------------------------------------- PUT /api/decks/:id/cards/:cardId
+  describe("PUT /api/decks/:deckId/cards/:cardId", () => {
+    it("updates an existing card's content via PUT", async () => {
+        const updatedData = { 
+        question: "Updated Question", 
+        answer: "Updated Answer" 
+        };
+  
+        const res = await supertest(app)
+            .put("/api/decks/deck-1/cards/card-1")
+            .send(updatedData);
+
+        // Assert against the network response
+        assert.equal(res.status, 200);
+        assert.equal(res.body.question, "Updated Question");
+        assert.equal(res.body.answer, "Updated Answer");  
+    });
+  });
+
   // -------------------------------------------------------- DELETE /api/decks/:id
   describe("DELETE /api/decks/:id", () => {
     it("returns success:true when deleting a deck", async () => {
