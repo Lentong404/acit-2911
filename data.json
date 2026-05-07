@@ -1,0 +1,283 @@
+{
+  "deck-1": {
+    "id": "deck-1",
+    "title": "JavaScript Basics",
+    "category": "Programming",
+    "cards": [
+      {
+        "id": "card-1",
+        "question": "What is a closure in JavaScript?",
+        "answer": "A closure is a function that has access to variables in its outer scope, even after the outer function has returned."
+      },
+      {
+        "id": "card-2",
+        "question": "What is the difference between let, const, and var?",
+        "answer": "var is function-scoped and hoisted. let is block-scoped and not hoisted. const is block-scoped, not hoisted, and cannot be reassigned."
+      },
+      {
+        "id": "card-3",
+        "question": "What is event delegation?",
+        "answer": "Event delegation is a technique where a single event listener is added to a parent element to handle events from its children, leveraging event bubbling."
+      },
+      {
+        "id": "card-c3dc851c-126d-4c8f-a743-3d7399517d11",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-2aa58f38-b4cf-47b2-ba10-5c8b4ed89892",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-b5514be2-06d6-4fd9-a275-0b8c1f28ae7e",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-c8ed60ca-c745-4108-aab4-c96e7c27dbbb",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-7bfc41ba-b1b6-42ca-a3d3-9191ee288065",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-c427a7e7-9f5c-45b6-af1c-345aaf16155c",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-880e15a5-7da0-406e-a425-1a2d472078e1",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-f97e9f59-cb75-440c-b2fc-ed9272d88ce3",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-1f105add-ed57-499b-957c-720070d2e55d",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-58e3952b-1baf-43b9-8d8c-00227cefe040",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-4a6d20e6-8e1d-4e42-8e91-3476a38b70de",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-740bcaf4-b7d6-4bbe-813d-6a36191002b2",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-dd80beb5-c86d-4b98-8acd-c300874bcfc7",
+        "question": "1+1",
+        "answer": "2"
+      }
+    ]
+  },
+  "deck-2": {
+    "id": "deck-2",
+    "title": "Spanish Vocabulary",
+    "category": "Languages",
+    "cards": [
+      {
+        "id": "card-4",
+        "question": "¿Cómo estás?",
+        "answer": "How are you?"
+      },
+      {
+        "id": "card-5",
+        "question": "¿Dónde está el baño?",
+        "answer": "Where is the bathroom?"
+      }
+    ]
+  },
+  "deck-3": {
+    "id": "deck-3",
+    "title": "React Hooks",
+    "category": "Programming",
+    "cards": [
+      {
+        "id": "card-6",
+        "question": "What does useState return?",
+        "answer": "An array with two elements: the current state value and a setter function to update it."
+      },
+      {
+        "id": "card-7",
+        "question": "When does useEffect run?",
+        "answer": "After every render by default. You can control when it runs by passing a dependency array."
+      }
+    ]
+  },
+  "deck-4": {
+    "id": "deck-4",
+    "title": "World Capitals",
+    "category": "Geography",
+    "cards": [
+      {
+        "id": "card-8",
+        "question": "What is the capital of Japan?",
+        "answer": "Tokyo"
+      },
+      {
+        "id": "card-9",
+        "question": "What is the capital of Brazil?",
+        "answer": "Brasília"
+      }
+    ]
+  },
+  "deck-33b9eb5d-a2d9-4ee8-9d82-e0d5b7d4720d": {
+    "id": "deck-33b9eb5d-a2d9-4ee8-9d82-e0d5b7d4720d",
+    "title": "Javascript Basics",
+    "category": "Programming Languages",
+    "cards": [
+      {
+        "id": "card-3d4ce6f9-da20-4ab8-8694-96fa9a33a494",
+        "question": "Javascript Basics?",
+        "answer": "Javascript Basics."
+      }
+    ]
+  },
+  "deck-bc6fbdfb-16e8-45ed-a30d-091a9047bec1": {
+    "id": "deck-bc6fbdfb-16e8-45ed-a30d-091a9047bec1",
+    "title": "Javascript Basics",
+    "category": "Programming, Languages",
+    "cards": []
+  },
+  "deck-a9088ba0-3dde-4288-abdb-a176cc0cc360": {
+    "id": "deck-a9088ba0-3dde-4288-abdb-a176cc0cc360",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-f1d1c25d-72a2-4ec6-989b-ee6cd04e70d9": {
+    "id": "deck-f1d1c25d-72a2-4ec6-989b-ee6cd04e70d9",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-0d48033c-395d-4677-a0b3-e5ffada5c3c7": {
+    "id": "deck-0d48033c-395d-4677-a0b3-e5ffada5c3c7",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-c86c95c1-c51e-4833-ad13-3d5d42aaa042": {
+    "id": "deck-c86c95c1-c51e-4833-ad13-3d5d42aaa042",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-1da131aa-1e0f-4a2a-a344-686b78e5385f": {
+    "id": "deck-1da131aa-1e0f-4a2a-a344-686b78e5385f",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-58f84538-ca90-4af5-a56d-eca8320511ef": {
+    "id": "deck-58f84538-ca90-4af5-a56d-eca8320511ef",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0": {
+    "id": "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0",
+    "title": "<script>alert('Hi')</script>",
+    "category": "",
+    "cards": [
+      {
+        "id": "card-aafd5941-38d9-49bb-9987-f01b8cbcf0c0",
+        "question": "tes",
+        "answer": "test"
+      }
+    ]
+  },
+  "deck-45e37c53-0428-4033-b760-ddbae837f52c": {
+    "id": "deck-45e37c53-0428-4033-b760-ddbae837f52c",
+    "title": "t",
+    "category": "",
+    "cards": []
+  },
+  "deck-cb70aa9e-0a52-4147-b182-f49a8886805c": {
+    "id": "deck-cb70aa9e-0a52-4147-b182-f49a8886805c",
+    "title": "[]",
+    "category": "",
+    "cards": []
+  },
+  "deck-291e48e0-37e4-4d27-9b2c-3ef1de2b0957": {
+    "id": "deck-291e48e0-37e4-4d27-9b2c-3ef1de2b0957",
+    "title": "tomatoes",
+    "category": "",
+    "cards": []
+  },
+  "deck-636d05a2-1054-44cc-88db-05eac4370bac": {
+    "id": "deck-636d05a2-1054-44cc-88db-05eac4370bac",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-7fc856cd-1a5e-4840-9a50-6e0fa3b8deb9": {
+    "id": "deck-7fc856cd-1a5e-4840-9a50-6e0fa3b8deb9",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-928d024d-dd01-4811-b06a-7d101bf05721": {
+    "id": "deck-928d024d-dd01-4811-b06a-7d101bf05721",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-a98ca1c2-fdfc-4b4f-8bd8-e135eab3f571": {
+    "id": "deck-a98ca1c2-fdfc-4b4f-8bd8-e135eab3f571",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-9109fa83-2881-442a-986b-dfd3f9a3ee5d": {
+    "id": "deck-9109fa83-2881-442a-986b-dfd3f9a3ee5d",
+    "title": "lissa's cards",
+    "category": "Languages",
+    "cards": [
+      {
+        "id": "card-42a5fa90-42bb-4bd2-a449-22618e855ab6",
+        "question": "what is lissa's favourite language?",
+        "answer": "Danish!"
+      },
+      {
+        "id": "card-526a198e-5a63-4a5e-acb8-d878933d5b03",
+        "question": "what is lissa's favourite snack?",
+        "answer": "Danish!"
+      }
+    ]
+  },
+  "deck-4b486ccf-2bb2-4e7c-b0c6-e1d23d58bf94": {
+    "id": "deck-4b486ccf-2bb2-4e7c-b0c6-e1d23d58bf94",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-cd59619d-b0a0-42f6-b1fb-7f79845bc307": {
+    "id": "deck-cd59619d-b0a0-42f6-b1fb-7f79845bc307",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  },
+  "deck-0280c6b1-c975-4c61-b44b-4f22886316ea": {
+    "id": "deck-0280c6b1-c975-4c61-b44b-4f22886316ea",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  }
+}
