@@ -5,6 +5,12 @@ let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
 
+// prevents crash on loading decks
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 //  API helper 
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
@@ -16,7 +22,7 @@ async function api(method, path, body) {
   return res.json();
 }
 
-//  Pop Up (Toast!)
+//  Pop Up 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;

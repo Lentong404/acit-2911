@@ -1,0 +1,208 @@
+{
+  "deck-1": {
+    "id": "deck-1",
+    "title": "JavaScript Basics",
+    "category": "Programming",
+    "cards": [
+      {
+        "id": "card-1",
+        "question": "Updated Question",
+        "answer": "Updated Answer"
+      },
+      {
+        "id": "card-2",
+        "question": "What is the difference between let, const, and var?",
+        "answer": "var is function-scoped and hoisted. let is block-scoped and not hoisted. const is block-scoped, not hoisted, and cannot be reassigned."
+      },
+      {
+        "id": "card-3",
+        "question": "What is event delegation?",
+        "answer": "Event delegation is a technique where a single event listener is added to a parent element to handle events from its children, leveraging event bubbling."
+      },
+      {
+        "id": "card-c3dc851c-126d-4c8f-a743-3d7399517d11",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-2aa58f38-b4cf-47b2-ba10-5c8b4ed89892",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-b5514be2-06d6-4fd9-a275-0b8c1f28ae7e",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-c8ed60ca-c745-4108-aab4-c96e7c27dbbb",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-7bfc41ba-b1b6-42ca-a3d3-9191ee288065",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-c427a7e7-9f5c-45b6-af1c-345aaf16155c",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-880e15a5-7da0-406e-a425-1a2d472078e1",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-f97e9f59-cb75-440c-b2fc-ed9272d88ce3",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-1f105add-ed57-499b-957c-720070d2e55d",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-58e3952b-1baf-43b9-8d8c-00227cefe040",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-4a6d20e6-8e1d-4e42-8e91-3476a38b70de",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-740bcaf4-b7d6-4bbe-813d-6a36191002b2",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-dd80beb5-c86d-4b98-8acd-c300874bcfc7",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-6635be93-354c-4f81-a2d3-fa10e8034793",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-7c74af36-d0a6-425b-8bbf-07f6a9b359a1",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-3122db78-7960-4b9c-a44a-1c6a14830b38",
+        "question": "1+1",
+        "answer": "2"
+      },
+      {
+        "id": "card-0e4951a4-e3ea-4b2a-8c33-c0b218c7d135",
+        "question": "1+1",
+        "answer": "2"
+      }
+    ]
+  },
+  "deck-2": {
+    "id": "deck-2",
+    "title": "Spanish Vocabulary",
+    "category": "Languages",
+    "cards": [
+      {
+        "id": "card-4",
+        "question": "¿Cómo estás?",
+        "answer": "How are you?"
+      },
+      {
+        "id": "card-5",
+        "question": "¿Dónde está el baño?",
+        "answer": "Where is the bathroom?"
+      }
+    ]
+  },
+  "deck-3": {
+    "id": "deck-3",
+    "title": "React Hooks",
+    "category": "Programming",
+    "cards": [
+      {
+        "id": "card-6",
+        "question": "What does useState return?",
+        "answer": "An array with two elements: the current state value and a setter function to update it."
+      },
+      {
+        "id": "card-7",
+        "question": "When does useEffect run?",
+        "answer": "After every render by default. You can control when it runs by passing a dependency array."
+      }
+    ]
+  },
+  "deck-4": {
+    "id": "deck-4",
+    "title": "World Capitals",
+    "category": "Geography",
+    "cards": [
+      {
+        "id": "card-8",
+        "question": "What is the capital of Japan?",
+        "answer": "Tokyo"
+      },
+      {
+        "id": "card-9",
+        "question": "What is the capital of Brazil?",
+        "answer": "Brasília"
+      }
+    ]
+  },
+  "deck-33b9eb5d-a2d9-4ee8-9d82-e0d5b7d4720d": {
+    "id": "deck-33b9eb5d-a2d9-4ee8-9d82-e0d5b7d4720d",
+    "title": "Javascript Basics",
+    "category": "Programming Languages",
+    "cards": [
+      {
+        "id": "card-3d4ce6f9-da20-4ab8-8694-96fa9a33a494",
+        "question": "Javascript Basics?",
+        "answer": "Javascript Basics."
+      }
+    ]
+  },
+  "deck-bc6fbdfb-16e8-45ed-a30d-091a9047bec1": {
+    "id": "deck-bc6fbdfb-16e8-45ed-a30d-091a9047bec1",
+    "title": "Javascript Basics",
+    "category": "Programming, Languages",
+    "cards": []
+  },
+  "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0": {
+    "id": "deck-c29f9686-ff31-46b0-ba2f-f7b35a8d8ee0",
+    "title": "<script>alert('Hi')</script>",
+    "category": "",
+    "cards": [
+      {
+        "id": "card-aafd5941-38d9-49bb-9987-f01b8cbcf0c0",
+        "question": "tes",
+        "answer": "test"
+      }
+    ]
+  },
+  "deck-cb70aa9e-0a52-4147-b182-f49a8886805c": {
+    "id": "deck-cb70aa9e-0a52-4147-b182-f49a8886805c",
+    "title": "[]",
+    "category": "",
+    "cards": []
+  },
+  "deck-291e48e0-37e4-4d27-9b2c-3ef1de2b0957": {
+    "id": "deck-291e48e0-37e4-4d27-9b2c-3ef1de2b0957",
+    "title": "tomatoes",
+    "category": "",
+    "cards": []
+  },
+  "deck-7d802d0e-4c86-4e2a-b4e4-eafe73a70068": {
+    "id": "deck-7d802d0e-4c86-4e2a-b4e4-eafe73a70068",
+    "title": "Science",
+    "category": "STEM",
+    "cards": []
+  }
+}

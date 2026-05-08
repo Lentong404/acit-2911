@@ -1,0 +1,16 @@
+[
+  { "name": "Basic Script", "input": "<script>alert(1)</script>", "expected": "" },
+  { "name": "Image Error", "input": "<img src=x onerror=alert(1)>", "expected": "<img src=\"x\">" },
+  { "name": "Simple Iframe", "input": "<iframe src='javascript:alert(1)'></iframe>", "expected": "" },
+  { "name": "Style Block", "input": "Text <style>body{color:red}</style>", "expected": "Text" },
+  { "name": "JavaScript Link", "input": "<a href='javascript:alert(1)'>Click</a>", "expected": "<a>Click</a>" },
+  { "name": "SVG Onload", "input": "<svg onload=alert(1)>", "expected": "<svg></svg>" },
+  { "name": "Marquee Onstart", "input": "<marquee onstart=alert(1)>Hello</marquee>", "expected": "<marquee>Hello</marquee>" },
+  { "name": "Body Onload", "input": "<body onload=alert(1)>", "expected": "" },
+  { "name": "Table Background", "input": "<table background='javascript:alert(1)'>", "expected": "<table></table>" },
+  { "name": "Nested Obfuscation", "input": "<<script>alert(1)</script>", "expected": "&lt;" },
+  { "name": "Attribute Injection", "input": "<div onmouseover='alert(1)'>Hover me</div>", "expected": "<div>Hover me</div>" },
+  { "name": "Broken Tag", "input": "<img src=\"javascript:alert('XSS')\"", "expected": "" },
+  { "name": "Safe Bold", "input": "This is <b>Bold</b>", "expected": "This is <b>Bold</b>" },
+  { "name": "Safe Link", "input": "<a href='https://google.com'>Google</a>", "expected": "<a href=\"https://google.com\">Google</a>" }
+]

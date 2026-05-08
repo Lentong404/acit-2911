@@ -1,7 +1,14 @@
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import process from 'process';
+import DOMPurify from 'isomorphic-dompurify';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
@@ -9,6 +16,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 //  Load & Save helpers 
 function loadDecks() {
@@ -84,9 +92,33 @@ app.get('/api/decks', (req, res) => {
 
 app.post('/api/decks', (req, res) => {
   const { title, category } = req.body;
-  if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required' });
+
+  //  Check if the raw input exists
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  //  Sanitize the inputs
+  // This strips out <script>, <iframe>, and malicious attributes like 'onerror'
+  const cleanTitle = DOMPurify.sanitize(title.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+  const cleanCategory = DOMPurify.sanitize((category || '').trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+
+  // Optional: Check if sanitization stripped EVERYTHING 
+  // (e.g., if the user submitted ONLY a <script> tag)
+  if (!cleanTitle) {
+    return res.status(400).json({ error: 'Invalid title content' });
+  }
+
   const id = 'deck-' + uuidv4();
-  decks[id] = { id, title: title.trim(), category: (category || '').trim(), cards: [] };
+  
+  //  Save the cleaned versions
+  decks[id] = { 
+    id, 
+    title: cleanTitle, 
+    category: cleanCategory, 
+    cards: [] 
+  };
+
   saveDecks();
   res.status(201).json(decks[id]);
 });
@@ -102,8 +134,8 @@ app.put('/api/decks/:deckId', (req, res) => {
   if (!deck) return res.status(404).json({ error: 'Deck not found' });
   const { title, category } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required' });
-  deck.title = title.trim();
-  deck.category = (category || '').trim();
+  deck.title = DOMPurify.sanitize(title.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+  deck.category = DOMPurify.sanitize((category || '').trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
   saveDecks();
   res.json(deck);
 });
@@ -125,13 +157,31 @@ app.get('/api/decks/:deckId/cards', (req, res) => {
 app.post('/api/decks/:deckId/cards', (req, res) => {
   const deck = decks[req.params.deckId];
   if (!deck) return res.status(404).json({ error: 'Deck not found' });
+  
   const { question, answer } = req.body;
   if (!question || !answer) return res.status(400).json({ error: 'Question and answer required' });
-  const card = { id: 'card-' + uuidv4(), question: question.trim(), answer: answer.trim() };
+
+  //  Sanitize the inputs before they touch data object
+  const cleanQuestion = DOMPurify.sanitize(question.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+  const cleanAnswer = DOMPurify.sanitize(answer.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+
+  if (!cleanQuestion || !cleanAnswer) {
+  return res.status(400).json({ error: 'Valid question and answer required' });
+  }
+
+
+  //  Use the cleaned versions for the new card
+  const card = { 
+    id: 'card-' + uuidv4(), 
+    question: cleanQuestion, 
+    answer: cleanAnswer 
+  };
+
   deck.cards.push(card);
   saveDecks();
   res.status(201).json(card);
 });
+
 
 app.put('/api/decks/:deckId/cards/:cardId', (req, res) => {
   const deck = decks[req.params.deckId];
@@ -140,8 +190,8 @@ app.put('/api/decks/:deckId/cards/:cardId', (req, res) => {
   if (!card) return res.status(404).json({ error: 'Card not found' });
   const { question, answer } = req.body;
   if (!question || !answer) return res.status(400).json({ error: 'Question and answer required' });
-  card.question = question.trim();
-  card.answer = answer.trim();
+  card.question = DOMPurify.sanitize(question.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
+  card.answer = DOMPurify.sanitize(answer.trim(), { FORBID_TAGS: ['style', 'script', 'iframe'] });
   saveDecks();
   res.json(card);
 });
@@ -156,4 +206,11 @@ app.delete('/api/decks/:deckId/cards/:cardId', (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Flashcard app running at http://localhost:${PORT}`));
+
+// This works in Node.js ES Modules to see if this file was run directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  app.listen(PORT, () => console.log(`Flashcard app running at http://localhost:${PORT}`));
+}
+
+
+export default app;

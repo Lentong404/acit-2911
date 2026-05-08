@@ -22,6 +22,7 @@ button:disabled { opacity: 0.35; pointer-events: none; }
 .card-face {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  
 }
 .card-back {
   transform: rotateY(180deg);
