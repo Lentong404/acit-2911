@@ -1,0 +1,7 @@
+deck_title,deck_category,card_type,question,answer,choices
+Network Protocol Fundamentals,Networking,basic,What does TCP stand for?,Transmission Control Protocol,
+Network Protocol Fundamentals,Networking,true_false,UDP guarantees in-order packet delivery.,False,
+Network Protocol Fundamentals,Networking,multiple_choice,Which OSI layer handles routing and logical addressing?,Network,Physical|Data Link|Network|Transport
+Linux Administration,DevOps,basic,What command changes file permissions in Linux?,chmod,
+Linux Administration,DevOps,true_false,The root user always has a UID of 0.,True,
+Linux Administration,DevOps,multiple_choice,Which signal gracefully requests a process to terminate?,SIGTERM,SIGKILL|SIGTERM|SIGINT|SIGSTOP
