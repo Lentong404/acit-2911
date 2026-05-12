@@ -8,6 +8,7 @@ import pool from "./db/pool.js";
 import { performance } from "perf_hooks";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import bcrypt from "bcrypt";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,52 @@ app.use(session({
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// AUTH ROUTES
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
+    const cleanUsername = DOMPurify.sanitize(username.trim(), sanitizeOpts);
+
+    if (!cleanUsername) {
+      return res.status(400).json({ error: "Invalid username content" });
+    }
+
+    const existing = await pool.query(
+      `SELECT id FROM users WHERE username = $1`,
+      [cleanUsername],
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: "Username already taken" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const id = "user-" + uuidv4();
+
+    const createdUser = await pool.query(
+      `INSERT INTO users (id, username, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING id, username`,
+      [id, cleanUsername, passwordHash],
+    );
+
+    req.session.userId = createdUser.rows[0].id;
+
+    res.status(201).json(createdUser.rows[0]);
+  } catch (err) {
+    console.error("error registering user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
 
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {
