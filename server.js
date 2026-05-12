@@ -116,6 +116,17 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+app.post("/api/auth/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("error destroying session", err);
+      return res.status(500).json({ error: "could not log out" });
+    }
+    res.clearCookie("connect.sid");
+    res.json({ success: true });
+  });
+});
+
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {
   try {
