@@ -127,6 +127,29 @@ app.post("/api/auth/logout", (req, res) => {
   });
 });
 
+app.get("/api/auth/me", async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, username FROM users WHERE id = $1`,
+      [req.session.userId],
+    );
+
+    if (result.rows.length === 0) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("error fetching current user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {
   try {
