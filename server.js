@@ -83,6 +83,39 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, username, password_hash FROM users WHERE username = $1`,
+      [username.trim()],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    req.session.userId = user.id;
+
+    res.json({ id: user.id, username: user.username });
+  } catch (err) {
+    console.error("error logging in user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {
   try {
