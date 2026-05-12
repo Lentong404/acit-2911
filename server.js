@@ -6,12 +6,32 @@ import process from "process";
 import DOMPurify from "isomorphic-dompurify";
 import pool from "./db/pool.js";
 import { performance } from "perf_hooks";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
+
+const PgSession = connectPgSimple(session);
+
+app.use(session({
+  store: new PgSession({
+    pool: pool,
+    tableName: "session",
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    sameSite: "lax",
+  },
+}));
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
