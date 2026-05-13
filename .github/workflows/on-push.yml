@@ -22,6 +22,12 @@ jobs:
 
       - name: Test with npm
         run: npm test
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: flashcards_db
+          PGUSER: test_user
+          PGPASSWORD: test_password
 
   create-pull-request:
     needs: build
