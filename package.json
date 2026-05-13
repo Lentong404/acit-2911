@@ -11,12 +11,12 @@
     "start": "npm run build:css && node server.js",
     "db:init": "node db/init-db.js",
     "db:test": "node db/test-db.js",
+    "pretest": "npm run db:init",
     "test": "node --test --test-concurrency=1 tests/*.test.js",
     "seed": "node db/seed.js",
     "purge": "node db/purge.js",
     "export": "node db/export.js",
     "restore": "node db/restore.js"
-
   },
   "keywords": [],
   "author": "",
