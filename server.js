@@ -159,14 +159,16 @@ function requireAuth(req, res, next) {
 }
 
 // DECK ROUTES
-app.get("/api/decks", async (req, res) => {
+app.get("/api/decks", requireAuth, async (req, res) => {
   try {
     const deckList = await pool.query(`
     SELECT decks.id, decks.title, decks.category, COUNT(cards.id)::int AS "cardCount"
     FROM decks
     LEFT JOIN cards ON cards.deck_id = decks.id
+    WHERE decks.user_id = $1
     GROUP BY decks.id
-    ORDER BY decks.creation_time DESC`);
+    ORDER BY decks.creation_time DESC`,
+      [req.session.userId]);
 
     res.json(deckList.rows);
   } catch (err) {
@@ -175,11 +177,11 @@ app.get("/api/decks", async (req, res) => {
   }
 });
 
-app.get("/api/decks/:deckId", async (req, res) => {
+app.get("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const theDeck = await pool.query(
-      `SELECT id, title, category FROM decks WHERE id = $1`,
-      [req.params.deckId],
+      `SELECT id, title, category FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
     );
 
     if (theDeck.rows.length === 0) {
@@ -212,7 +214,7 @@ app.get("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-app.post("/api/decks", async (req, res) => {
+app.post("/api/decks", requireAuth, async (req, res) => {
   try {
     const { title, category } = req.body;
 
@@ -234,10 +236,10 @@ app.post("/api/decks", async (req, res) => {
     const id = "deck-" + uuidv4();
 
     const createdDeck = await pool.query(
-      `INSERT INTO decks (id, title, category)
-       VALUES ($1, $2, $3)
+      `INSERT INTO decks (id, user_id, title, category)
+       VALUES ($1, $2, $3, $4)
        RETURNING id, title, category`,
-      [id, cleanTitle, cleanCategory],
+      [id, req.session.userId, cleanTitle, cleanCategory],
     );
 
     res.status(201).json({
@@ -250,7 +252,7 @@ app.post("/api/decks", async (req, res) => {
   }
 });
 
-app.put("/api/decks/:deckId", async (req, res) => {
+app.put("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const { title, category } = req.body;
 
@@ -271,9 +273,9 @@ app.put("/api/decks/:deckId", async (req, res) => {
     const updatedDeck = await pool.query(
       `UPDATE decks
     SET title = $1, category = $2
-    WHERE id = $3
+    WHERE id = $3 AND user_id = $4
     RETURNING id, title, category`,
-      [cleanTitle, cleanCategory, req.params.deckId],
+      [cleanTitle, cleanCategory, req.params.deckId, req.session.userId],
     );
 
     if (updatedDeck.rows.length === 0) {
@@ -287,11 +289,11 @@ app.put("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-app.delete("/api/decks/:deckId", async (req, res) => {
+app.delete("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const deleteDeck = await pool.query(
-      `DELETE FROM decks WHERE id = $1 RETURNING id`,
-      [req.params.deckId],
+      `DELETE FROM decks WHERE id = $1 AND user_id = $2 RETURNING id`,
+      [req.params.deckId, req.session.userId],
     );
 
     if (deleteDeck.rows.length === 0) {
