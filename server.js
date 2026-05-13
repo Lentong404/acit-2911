@@ -308,11 +308,12 @@ app.delete("/api/decks/:deckId", requireAuth, async (req, res) => {
 });
 
 //  CARD ROUTES
-app.get("/api/decks/:deckId/cards", async (req, res) => {
+app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   try {
-    const deckChecker = await pool.query(`SELECT id FROM decks WHERE id = $1`, [
-      req.params.deckId,
-    ]);
+    const deckChecker = await pool.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
 
     if (deckChecker.rows.length === 0) {
       return res.status(404).json({ error: "deck not found" });
@@ -341,12 +342,12 @@ app.get("/api/decks/:deckId/cards", async (req, res) => {
   }
 });
 
-app.post("/api/decks/:deckId/cards", async (req, res) => {
+app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const deckChecker = await client.query(
-      `SELECT id FROM decks WHERE id = $1`,
-      [req.params.deckId],
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
     );
     if (deckChecker.rows.length === 0) {
       return res.status(404).json({ error: "deck not found" });
@@ -429,7 +430,7 @@ app.post("/api/decks/:deckId/cards", async (req, res) => {
   }
 });
 
-app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
+app.put("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -446,6 +447,14 @@ app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
     const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
     const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
     const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
+
+    const deckChecker = await client.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
+    if (deckChecker.rows.length === 0) {
+      return res.status(404).json({ error: "deck not found" });
+    }
 
     await client.query("BEGIN");
 
@@ -529,8 +538,16 @@ app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
   }
 });
 
-app.delete("/api/decks/:deckId/cards/:cardId", async (req, res) => {
+app.delete("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   try {
+    const deckChecker = await pool.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
+    if (deckChecker.rows.length === 0) {
+      return res.status(404).json({ error: "deck not found" });
+    }
+
     const deleteCard = await pool.query(
       `DELETE FROM cards WHERE id = $1 AND deck_id = $2 RETURNING id`,
       [req.params.cardId, req.params.deckId],
