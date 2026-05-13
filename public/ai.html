@@ -572,7 +572,6 @@
     if (previewFlipZone) previewFlipZone.addEventListener('click', flipPreviewCard);
     if (previewPrev) previewPrev.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex > 0) { previewIndex--; updatePreviewDisplay(); } });
     if (previewNext) previewNext.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex < lastCards.length - 1) { previewIndex++; updatePreviewDisplay(); } });
-
     // Execution commands initialization
     loadOllamaModels();
     loadDecks();

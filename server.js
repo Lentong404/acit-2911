@@ -16,6 +16,7 @@ const PORT = 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/ai-chat", aiRouter);
 
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {

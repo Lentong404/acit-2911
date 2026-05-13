@@ -196,12 +196,40 @@ function renderStudyView() {
   document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
 }
 
+// Sound effects library file inventory mapping
+const SFX_FILES = [
+  "wooshlong1.wav",
+  "wooshlong2.wav",
+  "wooshshort1.wav",
+  "wooshshort2.wav",
+  "wooshshortdash6.wav",
+  "wooshshortdash7.wav",
+  "wooshshortdash8.wav",
+];
+
+
+function playRandomSFX() {
+      if (!SFX_FILES.length) return;
+      const randomFile = SFX_FILES[Math.floor(Math.random() * SFX_FILES.length)];
+      const sfxPath = `/audio/${randomFile}`;
+      const effectAudio = new Audio(sfxPath);
+      
+      // Tied to existing sfxVolume slider tracker variable
+      if (typeof sfxVolume === 'number') {
+        effectAudio.volume = sfxVolume;
+      }
+      effectAudio.play().catch(e => console.log("SFX blocked or missing:", e));
+    }
+
 function flipCard() {
   isFlipped = !isFlipped;
   document.getElementById('flashcard-inner').style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  playRandomSFX();
 }
-function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } }
-function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); } }
+
+const flipPreviewCard = flipCard;
+function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
+function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
 //  Card Modal 
 function openAddCardModal() {
@@ -327,9 +355,9 @@ const sfxValue = document.getElementById("sfx-volume-value");
 const backgroundMusic = document.getElementById("background-music");
 
 // VOLUME DROPDOWN
-
 const volumeWidget = document.getElementById("volume-widget");
 const volumeDropdown = document.getElementById("volume-dropdown");
+const volumeBtn = document.getElementById("volume-btn");
 
 let volumeTimer;
 
@@ -343,14 +371,47 @@ volumeWidget.addEventListener("mouseleave", () => {
     volumeDropdown.classList.add("hidden");
   }, 300);
 });
+
+if (musicVolumeSlider && musicValue) {
+  musicVolumeSlider.value = "0";
+  musicValue.textContent = "0%";
+}
  
-let musicVolume = Number(musicVolumeSlider.value) / 100;
+let musicVolume = 0; 
 let sfxVolume = Number(sfxVolumeSlider.value) / 100;
 
+/* ADDED: Keep track of the last non-zero volume level. Default to 40% */
+let preMuteVolume = 40; 
+
+if (backgroundMusic) {
+  backgroundMusic.volume = musicVolume;
+}
+
+if (volumeBtn) {
+  volumeBtn.textContent = "🔇";
+}
+
+// SLIDER INTERACTION HANDLERS
 musicVolumeSlider.addEventListener("input", () => {
   musicVolume = Number(musicVolumeSlider.value) / 100;
   musicValue.textContent = `${musicVolumeSlider.value}%`;
-  backgroundMusic.volume = musicVolume;
+  
+  if (backgroundMusic) {
+    backgroundMusic.volume = musicVolume;
+  }
+
+  // Update our tracked non-zero volume variable whenever the slider moves
+  if (musicVolumeSlider.value !== "0") {
+    preMuteVolume = Number(musicVolumeSlider.value);
+  }
+
+  if (volumeBtn) {
+    if (musicVolumeSlider.value === "0") {
+      volumeBtn.textContent = "🔇";
+    } else {
+      volumeBtn.textContent = "🔊";
+    }
+  }
 });
 
 sfxVolumeSlider.addEventListener("input", () => {
@@ -358,12 +419,34 @@ sfxVolumeSlider.addEventListener("input", () => {
   sfxValue.textContent = `${sfxVolumeSlider.value}%`;
 });
 
+/* ADDED: Click handler for the volume button to toggle mute state */
+if (volumeBtn) {
+  volumeBtn.addEventListener("click", () => {
+    if (musicVolumeSlider.value === "0") {
+      // Unmute: Restore to the last tracked non-zero volume level
+      musicVolumeSlider.value = String(preMuteVolume);
+      volumeBtn.textContent = "🔊";
+    } else {
+      // Mute: Save current position first, then drop to zero
+      preMuteVolume = Number(musicVolumeSlider.value);
+      musicVolumeSlider.value = "0";
+      volumeBtn.textContent = "🔇";
+    }
+    
+    // Sync the underlying audio engine and text layouts to match the new value
+    musicVolume = Number(musicVolumeSlider.value) / 100;
+    musicValue.textContent = `${musicVolumeSlider.value}%`;
+    if (backgroundMusic) {
+      backgroundMusic.volume = musicVolume;
+    }
+  });
+}
+
 document.addEventListener(
   "click", () => {
-    backgroundMusic.play();
+    if (backgroundMusic) backgroundMusic.play();
   },
   {once: true}
 );
-
 //  Init 
 loadDecks();

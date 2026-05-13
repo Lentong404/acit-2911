@@ -25,11 +25,13 @@
 
  <!-- Volume Widget -->
 <div id="volume-widget" class="fixed top-4 right-4 z-50">
+  <!-- FIXED: Added id="volume-btn" and set default initial emoji to muted -->
   <button
+    id="volume-btn"
     class="w-11 h-11 rounded-full bg-white text-black shadow-lg flex items-center justify-center text-xl hover:bg-gray-100"
     aria-label="Volume settings"
   >
-    🔊
+    🔇
   </button>
 
   <div
@@ -39,14 +41,16 @@
     <div class="mb-4">
       <div class="flex justify-between text-sm font-medium mb-1">
         <label for="music-volume">Music</label>
-        <span id="music-volume-value">40%</span>
+        <!-- FIXED: Set text readout label to 0% -->
+        <span id="music-volume-value">0%</span>
       </div>
       <input
         id="music-volume"
         type="range"
         min="0"
         max="100"
-        value="40"
+        /* FIXED: Set input slider position node tracking to 0 */
+        value="0"
         class="w-full accent-blue-500"
       />
     </div>
