@@ -1,0 +1,376 @@
+[
+  {
+    "userId": "user-d44ecf1b-56d4-4116-974b-a1a2d1b9d5eb",
+    "username": "instructor_973153",
+    "userCreationTime": "2026-05-09T11:51:21.417Z",
+    "decks": [
+      {
+        "deckId": "deck-589d0a9f-9ab5-4631-89d5-c33fc4e67472",
+        "title": "Web Application Security",
+        "category": "Cybersecurity",
+        "creationTime": "2026-05-09T04:51:21.417318",
+        "cards": [
+          {
+            "cardId": "card-375e2ec1-9047-4c27-8a91-aa89ed8956ce",
+            "question": "Using parameterized queries natively protects database targets from classic SQL injection vectors.",
+            "answer": "True",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-2628e3f4-3fd1-48f4-a07f-bf68ab91f052",
+            "question": "Which cookie attribute prevents client-side scripts from reading cookie tokens?",
+            "answer": "HttpOnly",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-49281cab-c69c-4818-a62b-2eeeb32501c7",
+                "choiceText": "Secure",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-dd24a5d7-2ed4-423e-bf26-339aeaf906fa",
+                "choiceText": "SameSite",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-df46063b-68b1-4a9c-bca1-a531d2fa33bd",
+                "choiceText": "HttpOnly",
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "cardId": "card-84acfab3-189d-4d63-88f7-7500534ccc37",
+            "question": "What attack payload vector tricks a authenticated browser into performing actions it didn't intend to?",
+            "answer": "CSRF",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-be712321-8f33-44ae-bb6a-1ba132c7cc07",
+            "question": "A Content Security Policy (CSP) can fully eliminate risk from XSS attacks when misconfigured.",
+            "answer": "False",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-e1924814-4781-4b60-a85e-11849621447f",
+            "question": "What does CORS stand for?",
+            "answer": "Cross-Origin Resource Sharing",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-2bd37775-069c-444e-b07c-f096d187e051",
+            "question": "Which cryptographic primitive is best suited for hashing human passwords?",
+            "answer": "argon2id",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-21412c78-f03c-4ddd-a9d0-f695bb88551c",
+                "choiceText": "MD5",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-96fa5111-1d7d-461a-a487-96477d5012e8",
+                "choiceText": "SHA-256",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-1d95bce1-cd18-41de-8c95-16deb2aae68a",
+                "choiceText": "argon2id",
+                "isCorrect": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "deckId": "deck-1de38122-8d65-4f89-9351-bdc0dc227293",
+        "title": "Advanced PostgreSQL Internals",
+        "category": "Databases",
+        "creationTime": "2026-05-09T04:51:21.417318",
+        "cards": [
+          {
+            "cardId": "card-79b6f887-9214-4015-a3a6-3bbb4b67a08f",
+            "question": "Running VACUUM FULL always requires a full table lock.",
+            "answer": "True",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-2eb38ed9-f8dc-4a28-9c33-4235445baddc",
+            "question": "The GIN (Generalized Inverted Index) type is suboptimal for full-text search indexing.",
+            "answer": "False",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-19be2994-4cb5-4733-a208-522108265ee5",
+            "question": "What mechanism does PostgreSQL use to handle concurrent modifications without locking rows?",
+            "answer": "MVCC",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-ca90341f-00c5-4a86-ae20-dcaafc1420af",
+            "question": "Which index type is default and handles equality and range queries?",
+            "answer": "B-Tree",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-69825eab-c3d3-4d14-9496-b64fb356f94a",
+                "choiceText": "Hash",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-e62b3f67-0013-4738-a26a-76a81b394b9c",
+                "choiceText": "B-Tree",
+                "isCorrect": true
+              },
+              {
+                "choiceId": "choice-e8551009-b038-408e-9042-75b1ca43ba84",
+                "choiceText": "GIN",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-4b6d209f-d910-45e4-8bf7-d4ae72f6f89e",
+                "choiceText": "GiST",
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "cardId": "card-d5c57160-a89b-4257-a7ad-109d49fe10a1",
+            "question": "Which isolation level completely prevents serialization anomalies and write skew?",
+            "answer": "Serializable",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-e9511251-320f-42ce-9033-e9975695fbd0",
+                "choiceText": "Read Committed",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-8b6b1ea4-a6c8-4b5b-9e1c-95c72d8cb26e",
+                "choiceText": "Repeatable Read",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-9812d102-ffe5-4b59-b751-7df902c7731e",
+                "choiceText": "Serializable",
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "cardId": "card-853f9fbc-fece-4d46-8900-ad18d950f816",
+            "question": "What parameter determines the maximum size of transaction logs stored before a checkpoint?",
+            "answer": "max_wal_size",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          }
+        ]
+      },
+      {
+        "deckId": "deck-63b9b9ea-4d9d-4083-b8a1-b54d0cdf9a21",
+        "title": "World War II Trivia",
+        "category": "History",
+        "creationTime": "2026-05-09T04:51:21.417318",
+        "cards": [
+          {
+            "cardId": "card-48231260-9079-4aad-b104-c836364c557e",
+            "question": "Who was the Prime Minister of Great Britain during most of WWII?",
+            "answer": "Winston Churchill",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-b1129ff5-5dac-453c-bc99-5509e963b5cf",
+                "choiceText": "Neville Chamberlain",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-1b39f27f-0438-46eb-b6df-417109c53ed1",
+                "choiceText": "Winston Churchill",
+                "isCorrect": true
+              },
+              {
+                "choiceId": "choice-5eac4742-316c-470b-b97e-50f1872199b5",
+                "choiceText": "Clement Attlee",
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "cardId": "card-6b3312c2-8036-4d0d-a927-2dad982949c3",
+            "question": "Which conference in 1945 brought together Allied leaders to plan Europe's postwar reorganization?",
+            "answer": "Yalta Conference",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-25084908-002b-41b0-b44e-8bd33cef9434",
+                "choiceText": "Tehran Conference",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-0cbcf3e5-0014-4fb7-934d-bf25fa1e2d19",
+                "choiceText": "Potsdam Conference",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-573bfb72-ad9d-4846-b6d1-447efd174f1f",
+                "choiceText": "Yalta Conference",
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "cardId": "card-d5766bbd-5e30-4907-904d-0154973b3374",
+            "question": "In what year did World War II officially end?",
+            "answer": "1945",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-724464f2-4323-4fa9-888a-7c50ae2a6fe0",
+            "question": "The Battle of Midway is widely considered the turning point of the war in the Pacific.",
+            "answer": "True",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-889fc4b0-7994-4450-9da0-6d820fb9d204",
+            "question": "What was the codename for the secret US project that developed the atomic bomb?",
+            "answer": "Manhattan Project",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-79238d3d-9e2e-4350-a015-62e06d6cb97a",
+            "question": "The United States joined WWII immediately following the invasion of Poland.",
+            "answer": "False",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          }
+        ]
+      },
+      {
+        "deckId": "deck-d1c724ad-33fe-4491-8576-9beac1e84f9d",
+        "title": "Web Development Essentials",
+        "category": "Programming",
+        "creationTime": "2026-05-09T04:51:21.417318",
+        "cards": [
+          {
+            "cardId": "card-1466ce41-f2f6-418b-b098-6a570ddee56c",
+            "question": "The HTTP 'OPTIONS' method is used to initiate a CORS preflight request.",
+            "answer": "True",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-b1a0c87a-e51c-4126-9356-65c6127c1e8f",
+            "question": "JavaScript is a statically typed language.",
+            "answer": "False",
+            "cardType": "true_false",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-408a0119-f8b6-441e-9052-e21ebe99c0df",
+            "question": "What CSS property controls the stack order of elements?",
+            "answer": "z-index",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          },
+          {
+            "cardId": "card-ecc7e29e-9b80-47f5-bf1c-a791c57cd1e9",
+            "question": "Which HTTP status code represents a resource that was permanently moved?",
+            "answer": "301",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-7ffb6553-7341-44dd-899c-4c37328a8bd2",
+                "choiceText": "201 Created",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-9dcdcf1e-688a-4524-8300-8eccef24ba6c",
+                "choiceText": "301 Moved Permanently",
+                "isCorrect": true
+              },
+              {
+                "choiceId": "choice-8645c594-9da0-4df8-89f0-b8f9cd9a9baa",
+                "choiceText": "403 Forbidden",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-3ed239f2-ae80-4d46-b85b-6255dd96be26",
+                "choiceText": "502 Bad Gateway",
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "cardId": "card-0d5f55bc-f902-4d99-b30a-9cb883d8d858",
+            "question": "Which array method returns a shallow copy of a portion of an array?",
+            "answer": "slice",
+            "cardType": "multiple_choice",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": [
+              {
+                "choiceId": "choice-b93da38f-329b-418a-a74d-7c2fb121685e",
+                "choiceText": "splice",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-86121c9e-df5d-43ed-8791-e4a4730e82f4",
+                "choiceText": "slice",
+                "isCorrect": true
+              },
+              {
+                "choiceId": "choice-778bc22a-1aaa-411a-ad96-44eb3efdbb13",
+                "choiceText": "shift",
+                "isCorrect": false
+              },
+              {
+                "choiceId": "choice-24f62072-a4e7-417f-bd95-0975f2c6c1a0",
+                "choiceText": "push",
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "cardId": "card-895eab9d-392e-4a89-bcdd-add7f6c8aea4",
+            "question": "What does DOM stand for?",
+            "answer": "Document Object Model",
+            "cardType": "basic",
+            "creationTime": "2026-05-09T04:51:21.417318",
+            "choices": []
+          }
+        ]
+      }
+    ]
+  }
+]
