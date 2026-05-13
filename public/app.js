@@ -296,5 +296,53 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// MUSIC SETTINGS
+const musicVolumeSlider = document.getElementById("music-volume");
+const sfxVolumeSlider = document.getElementById("sfx-volume");
+
+const musicValue = document.getElementById("music-volume-value");
+const sfxValue = document.getElementById("sfx-volume-value");
+
+const backgroundMusic = document.getElementById("background-music");
+
+// VOLUME DROPDOWN
+
+const volumeWidget = document.getElementById("volume-widget");
+const volumeDropdown = document.getElementById("volume-dropdown");
+
+let volumeTimer;
+
+volumeWidget.addEventListener("mouseenter", () => {
+  clearTimeout(volumeTimer);
+  volumeDropdown.classList.remove("hidden");
+});
+
+volumeWidget.addEventListener("mouseleave", () => {
+  volumeTimer = setTimeout(() => {
+    volumeDropdown.classList.add("hidden");
+  }, 300);
+});
+ 
+let musicVolume = Number(musicVolumeSlider.value) / 100;
+let sfxVolume = Number(sfxVolumeSlider.value) / 100;
+
+musicVolumeSlider.addEventListener("input", () => {
+  musicVolume = Number(musicVolumeSlider.value) / 100;
+  musicValue.textContent = `${musicVolumeSlider.value}%`;
+  backgroundMusic.volume = musicVolume;
+});
+
+sfxVolumeSlider.addEventListener("input", () => {
+  sfxVolume = Number(sfxVolumeSlider.value) / 100;
+  sfxValue.textContent = `${sfxVolumeSlider.value}%`;
+});
+
+document.addEventListener(
+  "click", () => {
+    backgroundMusic.play();
+  },
+  {once: true}
+);
+
 //  Init 
 loadDecks();

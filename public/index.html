@@ -4,11 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flashcards</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-white text-stone-900 min-h-screen">
+
+ <!-- Volume Widget -->
+<div id="volume-widget" class="fixed top-4 right-4 z-50">
+  <button
+    class="w-11 h-11 rounded-full bg-white text-black shadow-lg flex items-center justify-center text-xl hover:bg-gray-100"
+    aria-label="Volume settings"
+  >
+    🔊
+  </button>
+
+  <div
+    id="volume-dropdown"
+    class="hidden absolute right-0 mt-2 w-72 rounded-xl bg-white text-black shadow-xl p-4"
+  >
+    <div class="mb-4">
+      <div class="flex justify-between text-sm font-medium mb-1">
+        <label for="music-volume">Music</label>
+        <span id="music-volume-value">40%</span>
+      </div>
+      <input
+        id="music-volume"
+        type="range"
+        min="0"
+        max="100"
+        value="40"
+        class="w-full accent-blue-500"
+      />
+    </div>
+
+    <div>
+      <div class="flex justify-between text-sm font-medium mb-1">
+        <label for="sfx-volume">Sound Effects</label>
+        <span id="sfx-volume-value">70%</span>
+      </div>
+      <input
+        id="sfx-volume"
+        type="range"
+        min="0"
+        max="100"
+        value="70"
+        class="w-full accent-blue-500"
+      />
+    </div>
+  </div>
+</div>
 
   <!-- HOME VIEW -->
   <div id="home-view" class="view active max-w-5xl mx-auto px-8 py-10">
@@ -168,6 +214,11 @@
 
   <!-- Pop up (it's called toast apparently) -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-lg z-50 hidden whitespace-nowrap"></div>
+
+  <!-- BACKGROUND MUSIC -->
+  <audio id="background-music" loop>
+  <source src="/audio/music.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="app.js"></script>
 </body>
