@@ -150,6 +150,14 @@ app.get("/api/auth/me", async (req, res) => {
   }
 });
 
+// AUTH MIDDLEWARE
+function requireAuth(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+  next();
+}
+
 // DECK ROUTES
 app.get("/api/decks", async (req, res) => {
   try {
