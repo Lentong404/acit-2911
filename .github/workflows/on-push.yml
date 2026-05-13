@@ -1,0 +1,42 @@
+# Install JavaScript dependencies and run tests
+name: Test JavaScript Application
+
+on:
+  push:
+    branches: [ "feature/*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test with npm
+        run: npm test
+
+  create-pull-request:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        run: gh pr create -B main -H ${{ github.ref_name }} --title "Merge ${{ github.ref_name }} into main" --body "Automatic PR from Github Actions"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
