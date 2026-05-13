@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -6,6 +7,17 @@ import { fileURLToPath } from 'url';
 import process from 'process';
 import DOMPurify from 'isomorphic-dompurify';
 
+=======
+import express from "express";
+import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import { fileURLToPath } from "url";
+import process from "process";
+import DOMPurify from "isomorphic-dompurify";
+import pool from "./db/pool.js";
+import { performance } from "perf_hooks";
+import aiRouter from "./routes/ai.js";
+>>>>>>> Stashed changes
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +27,16 @@ const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
 app.use(express.json());
+<<<<<<< Updated upstream
 app.use(express.static(path.join(__dirname, 'public')));
+=======
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/ai-chat", aiRouter);
+
+app.get("/ai-cards", (req, res) => {
+  res.redirect(302, "/ai-cards.html");
+});
+>>>>>>> Stashed changes
 
 
 //  Load & Save helpers 

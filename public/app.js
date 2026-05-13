@@ -38,16 +38,17 @@ function showView(id) {
 }
 function goHome() { showView('home-view'); loadDecks(); }
 
-//  Home 
+//  Home
 async function loadDecks() {
   allDecks = await api('GET', '/decks');
   renderFilters();
-  renderGrid();
+  searchDecks();
 }
 
 function renderFilters() {
   const categories = ['All', ...new Set(allDecks.map(d => d.category).filter(Boolean))];
-  document.getElementById('filter-pills').innerHTML = categories.map(cat => `
+  const pills = document.getElementById('filter-pills');
+  pills.innerHTML = categories.map(cat => `
     <button onclick="setFilter('${esc(cat)}')"
       class="px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
         activeFilter === cat
@@ -56,6 +57,8 @@ function renderFilters() {
       }">
       ${esc(cat)}
     </button>`).join('');
+  // Keep pills visible
+  pills.style.display = 'flex';
 }
 
 function setFilter(cat) {
@@ -64,10 +67,10 @@ function setFilter(cat) {
   renderGrid();
 }
 
-function renderGrid() {
-  const filtered = activeFilter === 'All'
+function renderGrid(decks = null) {
+  const filtered = decks || (activeFilter === 'All'
     ? allDecks
-    : allDecks.filter(d => d.category === activeFilter);
+    : allDecks.filter(d => d.category === activeFilter));
 
   const grid = document.getElementById('deck-grid');
 
@@ -79,6 +82,9 @@ function renderGrid() {
         </svg>
         <p class="text-sm">No decks found.</p>
       </div>`;
+    // Keep pills visible
+    const pills = document.getElementById('filter-pills');
+    if (pills.children.length) pills.style.display = 'flex';
     return;
   }
 
@@ -296,5 +302,19 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-//  Init 
+//  Search
+function searchDecks() {
+  if (!allDecks.length) return;
+  const query = document.getElementById('deck-search').value.trim().toLowerCase();
+  const filtered = !query
+    ? allDecks
+    : allDecks.filter(d =>
+      d.title.toLowerCase().includes(query) ||
+      (d.category && d.category.toLowerCase().includes(query))
+    );
+  renderGrid(filtered);
+}
+document.getElementById('deck-search').addEventListener('input', searchDecks);
+
+//  Init
 loadDecks();
