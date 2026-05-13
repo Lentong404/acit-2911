@@ -37,6 +37,12 @@ jobs:
 
       - name: Test with npm
         run: npm test
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: postgres
+          DB_NAME: flashcards_db
+          DB_PORT: 5432
 
   create-pull-request:
     needs: build
