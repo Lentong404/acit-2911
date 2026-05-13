@@ -48,20 +48,12 @@ jobs:
       - name: Initialize database
         run: npm run db:init
         env:
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_NAME: flashcards_db
-          DB_PORT: 5432
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/flashcards_db
 
       - name: Test with npm
         run: npm test
         env:
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_NAME: flashcards_db
-          DB_PORT: 5432
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/flashcards_db
 
   create-pull-request:
     needs: build
