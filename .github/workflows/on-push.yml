@@ -38,9 +38,9 @@ jobs:
       - name: Wait for PostgreSQL
         run: |
           for i in {1..30}; do
-            pg_isready -h postgres -U postgres -p 5432 && break
+            pg_isready -h localhost -U postgres -p 5432 && break
             echo "Waiting for PostgreSQL... ($i/30)"
-            sleep 1
+            sleep 2
           done
         env:
           PGPASSWORD: postgres
@@ -50,7 +50,7 @@ jobs:
         env:
           DB_USER: postgres
           DB_PASSWORD: postgres
-          DB_HOST: postgres
+          DB_HOST: localhost
           DB_NAME: flashcards_db
           DB_PORT: 5432
 
@@ -59,7 +59,7 @@ jobs:
         env:
           DB_USER: postgres
           DB_PASSWORD: postgres
-          DB_HOST: postgres
+          DB_HOST: localhost
           DB_NAME: flashcards_db
           DB_PORT: 5432
 
