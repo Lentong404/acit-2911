@@ -1,0 +1,85 @@
+# Install JavaScript dependencies and run tests
+name: Test JavaScript Application
+
+on:
+  push:
+    branches: [ "feature/*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flashcards_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            pg_isready -h localhost -U postgres -p 5432 && break
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+        env:
+          PGPASSWORD: postgres
+
+      - name: Initialize database
+        run: npm run db:init
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_NAME: flashcards_db
+          DB_PORT: 5432
+
+      - name: Test with npm
+        run: npm test
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_NAME: flashcards_db
+          DB_PORT: 5432
+
+  create-pull-request:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        run: |
+          if ! gh pr list --head "${{ github.ref_name }}" --base main --json number -q .; then
+            gh pr create -B main -H ${{ github.ref_name }} --title "Merge ${{ github.ref_name }} into main" --body "Automatic PR from Github Actions"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
