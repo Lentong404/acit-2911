@@ -275,9 +275,28 @@ async function saveCard() {
 
 async function deleteCurrentCard() {
   if (!cards.length || !confirm('Delete this card?')) return;
+
+  /* ==========================================
+     CUSTOM AUDIO DELETE TRIGGER
+     ========================================== */
+  try {
+    const deleteAudio = new Audio("/audio/goat.mp3");
+    
+    // Connects playback volume output directly to your active sfxVolume slider variable
+    if (typeof sfxVolume === 'number') {
+      deleteAudio.volume = sfxVolume;
+    }
+    
+    deleteAudio.play().catch(e => console.log("Deletion audio blocked or missing:", e));
+  } catch (err) {
+    console.log("Audio track initialization error:", err);
+  }
+
+  // Restores your original database wipe routine and layout array splitting
   await api('DELETE', `/decks/${currentDeckId}/cards/${cards[currentCardIndex].id}`);
   cards.splice(currentCardIndex, 1);
   if (currentCardIndex >= cards.length && currentCardIndex > 0) currentCardIndex--;
+  
   showToast('Card deleted');
   renderStudyView();
 }
