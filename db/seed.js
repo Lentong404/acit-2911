@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 import pool from "./pool.js"; // Adjust path to your pg pool
 
 export async function seedDatabase() {
@@ -8,18 +9,27 @@ export async function seedDatabase() {
     console.log("Starting database seeding (Appending data)...");
     await client.query("BEGIN");
 
-    // Insert a Mock User
-    const userId = "user-" + crypto.randomUUID();
+    // Insert two test users with real bcrypt hashes
+    const aliceHash = await bcrypt.hash("alicepass", 12);
+    const bobHash = await bcrypt.hash("bobpass", 12);
+
+    const aliceId = "user-" + crypto.randomUUID();
+    const bobId = "user-" + crypto.randomUUID();
+
     await client.query(
       `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)`,
-      [userId, "instructor_" + crypto.randomBytes(3).toString("hex"), "mock_hash_value"]
+      [aliceId, "alice", aliceHash]
+    );
+    await client.query(
+      `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)`,
+      [bobId, "bob", bobHash]
     );
 
     // ========================================== DECK 1: WEB DEVELOPMENT
     const deck1Id = "deck-" + crypto.randomUUID();
     await client.query(
       `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
-      [deck1Id, userId, "Web Development Essentials", "Programming"]
+      [deck1Id, aliceId, "Web Development Essentials", "Programming"]
     );
 
     await client.query(
@@ -78,7 +88,7 @@ export async function seedDatabase() {
     const deck2Id = "deck-" + crypto.randomUUID();
     await client.query(
       `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
-      [deck2Id, userId, "World War II Trivia", "History"]
+      [deck2Id, aliceId, "World War II Trivia", "History"]
     );
 
     await client.query(
@@ -137,7 +147,7 @@ export async function seedDatabase() {
     const deck3Id = "deck-" + crypto.randomUUID();
     await client.query(
       `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
-      [deck3Id, userId, "Advanced PostgreSQL Internals", "Databases"]
+      [deck3Id, bobId, "Advanced PostgreSQL Internals", "Databases"]
     );
 
     await client.query(
@@ -196,7 +206,7 @@ export async function seedDatabase() {
     const deck4Id = "deck-" + crypto.randomUUID();
     await client.query(
       `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
-      [deck4Id, userId, "Web Application Security", "Cybersecurity"]
+      [deck4Id, bobId, "Web Application Security", "Cybersecurity"]
     );
 
     await client.query(
