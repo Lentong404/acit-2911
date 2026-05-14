@@ -15,6 +15,7 @@ try {
 } catch (err) {
   console.error("failed to create database tables");
   console.error(err);
+  process.exit(1);
 } finally {
   await pool.end();
 }

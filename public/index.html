@@ -4,11 +4,73 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flashcards</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-white text-stone-900 min-h-screen">
+
+ <!-- Volume Widget -->
+<div id="volume-widget" class="fixed top-4 right-4 z-50">
+  <!-- FIXED: Added id="volume-btn" and set default initial emoji to muted -->
+  <button
+    id="volume-btn"
+    class="w-11 h-11 rounded-full bg-white text-black shadow-lg flex items-center justify-center text-xl hover:bg-gray-100"
+    aria-label="Volume settings"
+  >
+    🔇
+  </button>
+
+  <div
+    id="volume-dropdown"
+    class="hidden absolute right-0 mt-2 w-72 rounded-xl bg-white text-black shadow-xl p-4"
+  >
+    <div class="mb-4">
+      <div class="flex justify-between text-sm font-medium mb-1">
+        <label for="music-volume">Music</label>
+        <!-- FIXED: Set text readout label to 0% -->
+        <span id="music-volume-value">0%</span>
+      </div>
+      <input
+        id="music-volume"
+        type="range"
+        min="0"
+        max="100"
+        /* FIXED: Set input slider position node tracking to 0 */
+        value="0"
+        class="w-full accent-blue-500"
+      />
+    </div>
+
+    <div>
+      <div class="flex justify-between text-sm font-medium mb-1">
+        <label for="sfx-volume">Sound Effects</label>
+        <span id="sfx-volume-value">70%</span>
+      </div>
+      <input
+        id="sfx-volume"
+        type="range"
+        min="0"
+        max="100"
+        value="70"
+        class="w-full accent-blue-500"
+      />
+    </div>
+  </div>
+</div>
 
   <!-- HOME VIEW -->
   <div id="home-view" class="view active max-w-5xl mx-auto px-8 py-10">
@@ -25,6 +87,11 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Deck
         </button>
+        <a href="/ai.html"
+          class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          AI Card Generator
+        </a>
         <button onclick="toggleDark()" id="dark-toggle"
           class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
           <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -35,8 +102,18 @@
       </div>
     </div>
 
-    <!-- Filter Buttons -->
-    <div id="filter-pills" class="flex flex-wrap gap-2 mb-8 mt-6"></div>
+    <!-- Search -->
+    <div class="mb-8 mt-6">
+      <input id="deck-search" type="text" autocomplete="off"
+        class="px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 text-sm focus:outline-none focus:border-stone-800 focus:bg-stone-50 transition-colors"
+        style="max-width: 200px;"
+        placeholder="Search decks..." />
+    </div>
+
+    <!-- Filter -->
+    <div class="mb-8">
+      <div id="filter-pills" class="flex flex-wrap gap-2"></div>
+    </div>
 
     <!-- Deck Grid -->
     <div id="deck-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
@@ -168,6 +245,11 @@
 
   <!-- Pop up (it's called toast apparently) -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-lg z-50 hidden whitespace-nowrap"></div>
+
+  <!-- BACKGROUND MUSIC -->
+  <audio id="background-music" loop>
+  <source src="/audio/music.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="app.js"></script>
 </body>

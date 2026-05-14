@@ -9,6 +9,7 @@ import { performance } from "perf_hooks";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcrypt";
+import aiRouter from "./routes/ai.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,7 @@ app.use(session({
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/ai-chat", aiRouter);
 
 // AUTH ROUTES
 app.post("/api/auth/register", async (req, res) => {

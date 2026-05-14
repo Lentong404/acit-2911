@@ -38,16 +38,17 @@ function showView(id) {
 }
 function goHome() { showView('home-view'); loadDecks(); }
 
-//  Home 
+//  Home
 async function loadDecks() {
   allDecks = await api('GET', '/decks');
   renderFilters();
-  renderGrid();
+  searchDecks();
 }
 
 function renderFilters() {
   const categories = ['All', ...new Set(allDecks.map(d => d.category).filter(Boolean))];
-  document.getElementById('filter-pills').innerHTML = categories.map(cat => `
+  const pills = document.getElementById('filter-pills');
+  pills.innerHTML = categories.map(cat => `
     <button onclick="setFilter('${esc(cat)}')"
       class="px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
         activeFilter === cat
@@ -56,6 +57,8 @@ function renderFilters() {
       }">
       ${esc(cat)}
     </button>`).join('');
+  // Keep pills visible
+  pills.style.display = 'flex';
 }
 
 function setFilter(cat) {
@@ -64,10 +67,10 @@ function setFilter(cat) {
   renderGrid();
 }
 
-function renderGrid() {
-  const filtered = activeFilter === 'All'
+function renderGrid(decks = null) {
+  const filtered = decks || (activeFilter === 'All'
     ? allDecks
-    : allDecks.filter(d => d.category === activeFilter);
+    : allDecks.filter(d => d.category === activeFilter));
 
   const grid = document.getElementById('deck-grid');
 
@@ -79,6 +82,9 @@ function renderGrid() {
         </svg>
         <p class="text-sm">No decks found.</p>
       </div>`;
+    // Keep pills visible
+    const pills = document.getElementById('filter-pills');
+    if (pills.children.length) pills.style.display = 'flex';
     return;
   }
 
@@ -190,12 +196,40 @@ function renderStudyView() {
   document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
 }
 
+// Sound effects library file inventory mapping
+const SFX_FILES = [
+  "wooshlong1.wav",
+  "wooshlong2.wav",
+  "wooshshort1.wav",
+  "wooshshort2.wav",
+  "wooshshortdash6.wav",
+  "wooshshortdash7.wav",
+  "wooshshortdash8.wav",
+];
+
+
+function playRandomSFX() {
+      if (!SFX_FILES.length) return;
+      const randomFile = SFX_FILES[Math.floor(Math.random() * SFX_FILES.length)];
+      const sfxPath = `/audio/${randomFile}`;
+      const effectAudio = new Audio(sfxPath);
+      
+      // Tied to existing sfxVolume slider tracker variable
+      if (typeof sfxVolume === 'number') {
+        effectAudio.volume = sfxVolume;
+      }
+      effectAudio.play().catch(e => console.log("SFX blocked or missing:", e));
+    }
+
 function flipCard() {
   isFlipped = !isFlipped;
   document.getElementById('flashcard-inner').style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  playRandomSFX();
 }
-function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } }
-function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); } }
+
+const flipPreviewCard = flipCard;
+function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
+function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
 //  Card Modal 
 function openAddCardModal() {
@@ -241,9 +275,28 @@ async function saveCard() {
 
 async function deleteCurrentCard() {
   if (!cards.length || !confirm('Delete this card?')) return;
+
+  /* ==========================================
+     CUSTOM AUDIO DELETE TRIGGER
+     ========================================== */
+  try {
+    const deleteAudio = new Audio("/audio/goat.mp3");
+    
+    // Connects playback volume output directly to your active sfxVolume slider variable
+    if (typeof sfxVolume === 'number') {
+      deleteAudio.volume = sfxVolume;
+    }
+    
+    deleteAudio.play().catch(e => console.log("Deletion audio blocked or missing:", e));
+  } catch (err) {
+    console.log("Audio track initialization error:", err);
+  }
+
+  // Restores your original database wipe routine and layout array splitting
   await api('DELETE', `/decks/${currentDeckId}/cards/${cards[currentCardIndex].id}`);
   cards.splice(currentCardIndex, 1);
   if (currentCardIndex >= cards.length && currentCardIndex > 0) currentCardIndex--;
+  
   showToast('Card deleted');
   renderStudyView();
 }
@@ -296,5 +349,123 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+//  Search
+function searchDecks() {
+  if (!allDecks.length) return;
+  const query = document.getElementById('deck-search').value.trim().toLowerCase();
+  const filtered = !query
+    ? allDecks
+    : allDecks.filter(d =>
+      d.title.toLowerCase().includes(query) ||
+      (d.category && d.category.toLowerCase().includes(query))
+    );
+  renderGrid(filtered);
+}
+document.getElementById('deck-search').addEventListener('input', searchDecks);
+
+//  Init
+// MUSIC SETTINGS
+const musicVolumeSlider = document.getElementById("music-volume");
+const sfxVolumeSlider = document.getElementById("sfx-volume");
+
+const musicValue = document.getElementById("music-volume-value");
+const sfxValue = document.getElementById("sfx-volume-value");
+
+const backgroundMusic = document.getElementById("background-music");
+
+// VOLUME DROPDOWN
+const volumeWidget = document.getElementById("volume-widget");
+const volumeDropdown = document.getElementById("volume-dropdown");
+const volumeBtn = document.getElementById("volume-btn");
+
+let volumeTimer;
+
+volumeWidget.addEventListener("mouseenter", () => {
+  clearTimeout(volumeTimer);
+  volumeDropdown.classList.remove("hidden");
+});
+
+volumeWidget.addEventListener("mouseleave", () => {
+  volumeTimer = setTimeout(() => {
+    volumeDropdown.classList.add("hidden");
+  }, 300);
+});
+
+if (musicVolumeSlider && musicValue) {
+  musicVolumeSlider.value = "0";
+  musicValue.textContent = "0%";
+}
+ 
+let musicVolume = 0; 
+let sfxVolume = Number(sfxVolumeSlider.value) / 100;
+
+/* ADDED: Keep track of the last non-zero volume level. Default to 40% */
+let preMuteVolume = 40; 
+
+if (backgroundMusic) {
+  backgroundMusic.volume = musicVolume;
+}
+
+if (volumeBtn) {
+  volumeBtn.textContent = "🔇";
+}
+
+// SLIDER INTERACTION HANDLERS
+musicVolumeSlider.addEventListener("input", () => {
+  musicVolume = Number(musicVolumeSlider.value) / 100;
+  musicValue.textContent = `${musicVolumeSlider.value}%`;
+  
+  if (backgroundMusic) {
+    backgroundMusic.volume = musicVolume;
+  }
+
+  // Update our tracked non-zero volume variable whenever the slider moves
+  if (musicVolumeSlider.value !== "0") {
+    preMuteVolume = Number(musicVolumeSlider.value);
+  }
+
+  if (volumeBtn) {
+    if (musicVolumeSlider.value === "0") {
+      volumeBtn.textContent = "🔇";
+    } else {
+      volumeBtn.textContent = "🔊";
+    }
+  }
+});
+
+sfxVolumeSlider.addEventListener("input", () => {
+  sfxVolume = Number(sfxVolumeSlider.value) / 100;
+  sfxValue.textContent = `${sfxVolumeSlider.value}%`;
+});
+
+/* ADDED: Click handler for the volume button to toggle mute state */
+if (volumeBtn) {
+  volumeBtn.addEventListener("click", () => {
+    if (musicVolumeSlider.value === "0") {
+      // Unmute: Restore to the last tracked non-zero volume level
+      musicVolumeSlider.value = String(preMuteVolume);
+      volumeBtn.textContent = "🔊";
+    } else {
+      // Mute: Save current position first, then drop to zero
+      preMuteVolume = Number(musicVolumeSlider.value);
+      musicVolumeSlider.value = "0";
+      volumeBtn.textContent = "🔇";
+    }
+    
+    // Sync the underlying audio engine and text layouts to match the new value
+    musicVolume = Number(musicVolumeSlider.value) / 100;
+    musicValue.textContent = `${musicVolumeSlider.value}%`;
+    if (backgroundMusic) {
+      backgroundMusic.volume = musicVolume;
+    }
+  });
+}
+
+document.addEventListener(
+  "click", () => {
+    if (backgroundMusic) backgroundMusic.play();
+  },
+  {once: true}
+);
 //  Init 
 loadDecks();
