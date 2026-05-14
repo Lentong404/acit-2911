@@ -1,2 +1,5 @@
 node_modules/
 .env
+# Curl testing artifacts
+*-cookies.txt
+cookies.txt
