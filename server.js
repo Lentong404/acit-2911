@@ -10,6 +10,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import aiRouter from "./routes/ai.js";
+import { requireAuth } from "./middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -151,14 +152,6 @@ app.get("/api/auth/me", async (req, res) => {
     res.status(500).json({ error: "database error" });
   }
 });
-
-// AUTH MIDDLEWARE
-function requireAuth(req, res, next) {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
-  next();
-}
 
 // DECK ROUTES
 app.get("/api/decks", requireAuth, async (req, res) => {
