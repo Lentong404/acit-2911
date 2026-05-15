@@ -92,6 +92,13 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           AI Card Generator
         </a>
+	<div class="flex items-center gap-2 text-xs font-medium text-stone-500">
+          <span>Logged in as <strong id="user-display" class="text-stone-700">…</strong></span>
+          <button onclick="doLogout()"
+            class="px-3 py-1.5 rounded-lg border border-stone-200 hover:border-stone-400 hover:text-stone-700 transition-colors">
+            Logout
+          </button>
+        </div>
         <button onclick="toggleDark()" id="dark-toggle"
           class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
           <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
