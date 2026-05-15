@@ -54,6 +54,7 @@ jobs:
         run: npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/flashcards_db
+          SESSION_SECRET: test-secret-for-ci-only-not-actually-secret
 
   create-pull-request:
     needs: build
