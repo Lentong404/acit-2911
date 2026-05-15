@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import app from "../server.js";
 import pool from "../db/pool.js"; 
+import { createAuthedAgent, cleanupTestUsers } from "./helpers.js";
 
 describe("API Endpoint Integration Suite", () => {
+  let agent, userId;
 
   after(async () => {
     await pool.end();
@@ -14,10 +16,13 @@ describe("API Endpoint Integration Suite", () => {
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
     await pool.query("DELETE FROM decks");
+    await cleanupTestUsers();
+
+    ({ agent, userId } = await createAuthedAgent(app));
 
     await pool.query(
-      "INSERT INTO decks (id, title, category) VALUES ($1, $2, $3)",
-      ["deck-integration-1", "API Test Deck", "Testing"]
+      "INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)",
+      ["deck-integration-1", userId, "API Test Deck", "Testing"]
     );
   });
 
@@ -33,7 +38,7 @@ describe("API Endpoint Integration Suite", () => {
         ]
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-integration-1/cards")
         .send(complexPayload)
         .expect("Content-Type", /json/)
@@ -57,7 +62,7 @@ describe("API Endpoint Integration Suite", () => {
         answer: "Safe Answer <iframe src='malicious.site'></iframe>"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-integration-1/cards")
         .send(dirtyPayload)
         .expect(201);
@@ -72,7 +77,7 @@ describe("API Endpoint Integration Suite", () => {
 
   describe("GET /api/decks/:deckId", () => {
     it("should return a clean 404 error packet when requesting an unknown deck id", async () => {
-      const res = await request(app)
+      const res = await agent
         .get("/api/decks/deck-does-not-exist")
         .expect(404);
 

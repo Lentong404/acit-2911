@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import app from "../server.js"; 
 import pool from "../db/pool.js"; 
+import { createAuthedAgent, cleanupTestUsers } from "./helpers.js";
 
 describe("Security Sanitization Integration", () => {
+  let agent, userId;
 
   after(async () => {
     await pool.end();
@@ -14,11 +16,14 @@ describe("Security Sanitization Integration", () => {
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
     await pool.query("DELETE FROM decks");
+    await cleanupTestUsers();
+
+    ({ agent, userId } = await createAuthedAgent(app));
 
     // Establish a baseline clean deck destination to target during payloads
     await pool.query(
-      "INSERT INTO decks (id, title, category) VALUES ($1, $2, $3)",
-      ["deck-security-id", "Security Sandbox Deck", "QA Verification"]
+      "INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)",
+      ["deck-security-id", userId, "Security Sandbox Deck", "QA Verification"]
     );
   });
 
@@ -31,7 +36,7 @@ describe("Security Sanitization Integration", () => {
         answer: "Standard Safe Text"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -51,7 +56,7 @@ describe("Security Sanitization Integration", () => {
         answer: "Standard Safe Text"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -69,7 +74,7 @@ describe("Security Sanitization Integration", () => {
         answer: "Standard Safe Text"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -87,7 +92,7 @@ describe("Security Sanitization Integration", () => {
         answer: "Standard Safe Text"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -105,7 +110,7 @@ describe("Security Sanitization Integration", () => {
         answer: "Title <style>body{color:red}</style>"
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -131,7 +136,7 @@ describe("Security Sanitization Integration", () => {
         answer: safeText
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(payload)
         .expect(201);
@@ -150,7 +155,7 @@ describe("Security Sanitization Integration", () => {
         answer: "   <iframe src=''></iframe>   " // Reduces to spaces which get trimmed away
       };
 
-      const res = await request(app)
+      const res = await agent
         .post("/api/decks/deck-security-id/cards")
         .send(dangerousPayload)
         .expect(400);

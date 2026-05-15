@@ -4,6 +4,7 @@ import request from "supertest";
 import { readFile } from "fs/promises";
 import app from "../server.js"; 
 import pool from "../db/pool.js"; 
+import { createAuthedAgent, cleanupTestUsers } from "./helpers.js";
 
 // Load the JSON attack vectors mapping directly from your file system
 const testData = JSON.parse(
@@ -11,6 +12,7 @@ const testData = JSON.parse(
 );
 
 describe("Bulk Security Sanitization Integration", () => {
+  let agent, userId;
 
   after(async () => {
     await pool.end();
@@ -20,11 +22,14 @@ describe("Bulk Security Sanitization Integration", () => {
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
     await pool.query("DELETE FROM decks");
+    await cleanupTestUsers();
+
+    ({ agent, userId } = await createAuthedAgent(app));
 
     // Establish a fixed parent node relation to reference during bulk loops
     await pool.query(
-      "INSERT INTO decks (id, title, category) VALUES ($1, $2, $3)",
-      ["deck-bulk-security", "Bulk Vector Test Deck", "Security Automation"]
+      "INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)",
+      ["deck-bulk-security", userId, "Bulk Vector Test Deck", "Security Automation"]
     );
   });
 
@@ -43,7 +48,7 @@ describe("Bulk Security Sanitization Integration", () => {
 
       if (expectRejection) {
         // Scenario A: Testing complete filter stripping validation failures
-        const res = await request(app)
+        const res = await agent
           .post("/api/decks/deck-bulk-security/cards")
           .send(payload)
           .expect(400);
@@ -56,7 +61,7 @@ describe("Bulk Security Sanitization Integration", () => {
 
       } else {
         // Scenario B: Testing standard sanitization filtration preservation
-        const res = await request(app)
+        const res = await agent
           .post("/api/decks/deck-bulk-security/cards")
           .send(payload)
           .expect(201);
