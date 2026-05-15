@@ -573,8 +573,20 @@
     if (previewPrev) previewPrev.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex > 0) { previewIndex--; updatePreviewDisplay(); } });
     if (previewNext) previewNext.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex < lastCards.length - 1) { previewIndex++; updatePreviewDisplay(); } });
     // Execution commands initialization
-    loadOllamaModels();
-    loadDecks();
+    // Auth check before doing anything else
+    (async function () {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.status === 401) {
+          window.location.href = '/login.html';
+          return;
+        }
+        loadOllamaModels();
+        loadDecks();
+      } catch (err) {
+        console.error('Auth check failed', err);
+      }
+    })();
   </script>
 </body>
 </html>
