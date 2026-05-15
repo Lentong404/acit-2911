@@ -11,13 +11,16 @@ function esc(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-//  API helper 
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined
   });
+  if (res.status === 401) {
+    window.location.href = '/login.html';
+    throw new Error('Not logged in');
+  }
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -468,4 +471,24 @@ document.addEventListener(
   {once: true}
 );
 //  Init 
-loadDecks();
+async function init() {
+  try {
+    const me = await api('GET', '/auth/me');
+    const userDisplay = document.getElementById('user-display');
+    if (userDisplay) userDisplay.textContent = me.username;
+  } catch (err) {
+    // api() already redirected on 401; nothing more to do
+    return;
+  }
+  loadDecks();
+}
+init();
+
+// Logout button handler
+async function doLogout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } finally {
+    window.location.href = '/login.html';
+  }
+}

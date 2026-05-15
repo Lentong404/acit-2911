@@ -2,6 +2,7 @@ import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import pool from "../db/pool.js";
 import DOMPurify from "isomorphic-dompurify";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 const OLLAMA_BASE = String(process.env.OLLAMA_HOST || "http://localhost:11434").replace(/\/$/, "");
@@ -56,7 +57,7 @@ router.get("/", (req, res) => {
 /**
  * GET /ai-chat/models — names from local Ollama (`ollama list` /api/tags)
  */
-router.get("/models", async (req, res) => {
+router.get("/models", requireAuth, async (req, res) => {
   try {
     const r = await fetch(OLLAMA_TAGS_API, {
       headers: { Accept: "application/json" },
@@ -92,7 +93,7 @@ router.get("/models", async (req, res) => {
  * Send a topic to Ollama and stream JSON flashcards (array of {question, answer}).
  * Body: { prompt, model?: string, cardCount?: number (1–25), systemPrompt?: string }
  */
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const { prompt, systemPrompt: customSystem } = req.body;
   const cardCount = clampCardCount(req.body.cardCount);
   const bodyModel = req.body.model;
@@ -198,7 +199,7 @@ router.post("/", async (req, res) => {
  * POST /ai-chat/completed
  * Sanitize a single answer string (legacy / simple flows)
  */
-router.post("/completed", async (req, res) => {
+router.post("/completed", requireAuth, async (req, res) => {
   const { prompt, answer } = req.body;
 
   if (!answer) {
@@ -216,7 +217,7 @@ router.post("/completed", async (req, res) => {
  * Parse model output into sanitized { question, answer }[].
  * Body: { raw: string }
  */
-router.post("/parse-cards", (req, res) => {
+router.post("/parse-cards", requireAuth, (req, res) => {
   const { raw } = req.body;
   if (raw == null || typeof raw !== "string") {
     return res.status(400).json({ error: "raw text is required" });
@@ -233,7 +234,7 @@ router.post("/parse-cards", (req, res) => {
  * POST /ai-chat/save-batch
  * Body: { deckId: string, cards: { question, answer }[] }
  */
-router.post("/save-batch", async (req, res) => {
+router.post("/save-batch", requireAuth, async (req, res) => {
   const { deckId, cards } = req.body;
 
   if (!deckId || typeof deckId !== "string") {
@@ -245,9 +246,12 @@ router.post("/save-batch", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    const deckCheck = await client.query(`SELECT id FROM decks WHERE id = $1`, [deckId]);
+    const deckCheck = await client.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [deckId, req.session.userId]
+    );
     if (deckCheck.rows.length === 0) {
-      return res.status(400).json({ error: "Deck not found" });
+      return res.status(404).json({ error: "deck not found" });
     }
 
     await client.query("BEGIN");
@@ -290,7 +294,7 @@ router.post("/save-batch", async (req, res) => {
  * POST /ai-chat/save
  * Save the Q&A pair to the database
  */
-router.post("/save", async (req, res) => {
+router.post("/save", requireAuth, async (req, res) => {
   const { prompt, answer, deckId, deckTitle } = req.body;
 
   if (!prompt || !answer) {
@@ -300,16 +304,13 @@ router.post("/save", async (req, res) => {
   try {
     let deckIdToUse = deckId;
 
-    if (!deckIdToUse) {
-      // Check if user has a matching deck title
-      if (req.user) {
-        const result = await pool.query(
-          "SELECT id FROM decks WHERE user_id = $1 AND title = $2",
-          [req.user.id, deckTitle]
-        );
-        if (result.rows.length > 0) {
-          deckIdToUse = result.rows[0].id;
-        }
+    if (!deckIdToUse && deckTitle) {
+      const result = await pool.query(
+        `SELECT id FROM decks WHERE user_id = $1 AND title = $2`,
+        [req.session.userId, deckTitle]
+      );
+      if (result.rows.length > 0) {
+        deckIdToUse = result.rows[0].id;
       }
     }
 
@@ -317,9 +318,25 @@ router.post("/save", async (req, res) => {
       return res.status(400).json({ error: "Deck not found. Please specify a deck ID or matching deck title." });
     }
 
+    const ownershipCheck = await pool.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [deckIdToUse, req.session.userId]
+    );
+    if (ownershipCheck.rows.length === 0) {
+      return res.status(404).json({ error: "deck not found" });
+    }
+
+    const cleanPrompt = DOMPurify.sanitize(String(prompt), PURIFY_OPTS).trim();
+    const cleanAnswer = DOMPurify.sanitize(String(answer), PURIFY_OPTS).trim();
+
+    if (!cleanPrompt || !cleanAnswer) {
+      return res.status(400).json({ error: "Prompt and answer are required" });
+    }
+
+    const cardId = `card-${uuidv4()}`;
     const result = await pool.query(
-      "INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'basic') RETURNING id",
-      [`card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, deckIdToUse, prompt, answer]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'basic') RETURNING id`,
+      [cardId, deckIdToUse, cleanPrompt, cleanAnswer]
     );
 
     res.json({

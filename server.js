@@ -6,7 +6,11 @@ import process from "process";
 import DOMPurify from "isomorphic-dompurify";
 import pool from "./db/pool.js";
 import { performance } from "perf_hooks";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import bcrypt from "bcrypt";
 import aiRouter from "./routes/ai.js";
+import { requireAuth } from "./middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,19 +18,152 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
+const PgSession = connectPgSimple(session);
+
+app.use(session({
+  store: new PgSession({
+    pool: pool,
+    tableName: "session",
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    sameSite: "lax",
+  },
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/ai-chat", aiRouter);
 
+// AUTH ROUTES
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
+    const cleanUsername = DOMPurify.sanitize(username.trim(), sanitizeOpts);
+
+    if (!cleanUsername) {
+      return res.status(400).json({ error: "Invalid username content" });
+    }
+
+    const existing = await pool.query(
+      `SELECT id FROM users WHERE username = $1`,
+      [cleanUsername],
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: "Username already taken" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const id = "user-" + uuidv4();
+
+    const createdUser = await pool.query(
+      `INSERT INTO users (id, username, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING id, username`,
+      [id, cleanUsername, passwordHash],
+    );
+
+    req.session.userId = createdUser.rows[0].id;
+
+    res.status(201).json(createdUser.rows[0]);
+  } catch (err) {
+    console.error("error registering user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, username, password_hash FROM users WHERE username = $1`,
+      [username.trim()],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    req.session.userId = user.id;
+
+    res.json({ id: user.id, username: user.username });
+  } catch (err) {
+    console.error("error logging in user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("error destroying session", err);
+      return res.status(500).json({ error: "could not log out" });
+    }
+    res.clearCookie("connect.sid");
+    res.json({ success: true });
+  });
+});
+
+app.get("/api/auth/me", async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, username FROM users WHERE id = $1`,
+      [req.session.userId],
+    );
+
+    if (result.rows.length === 0) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("error fetching current user", err);
+    res.status(500).json({ error: "database error" });
+  }
+});
+
 // DECK ROUTES
-app.get("/api/decks", async (req, res) => {
+app.get("/api/decks", requireAuth, async (req, res) => {
   try {
     const deckList = await pool.query(`
     SELECT decks.id, decks.title, decks.category, COUNT(cards.id)::int AS "cardCount"
     FROM decks
     LEFT JOIN cards ON cards.deck_id = decks.id
+    WHERE decks.user_id = $1
     GROUP BY decks.id
-    ORDER BY decks.creation_time DESC`);
+    ORDER BY decks.creation_time DESC`,
+      [req.session.userId]);
 
     res.json(deckList.rows);
   } catch (err) {
@@ -35,11 +172,11 @@ app.get("/api/decks", async (req, res) => {
   }
 });
 
-app.get("/api/decks/:deckId", async (req, res) => {
+app.get("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const theDeck = await pool.query(
-      `SELECT id, title, category FROM decks WHERE id = $1`,
-      [req.params.deckId],
+      `SELECT id, title, category FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
     );
 
     if (theDeck.rows.length === 0) {
@@ -72,7 +209,7 @@ app.get("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-app.post("/api/decks", async (req, res) => {
+app.post("/api/decks", requireAuth, async (req, res) => {
   try {
     const { title, category } = req.body;
 
@@ -94,10 +231,10 @@ app.post("/api/decks", async (req, res) => {
     const id = "deck-" + uuidv4();
 
     const createdDeck = await pool.query(
-      `INSERT INTO decks (id, title, category)
-       VALUES ($1, $2, $3)
+      `INSERT INTO decks (id, user_id, title, category)
+       VALUES ($1, $2, $3, $4)
        RETURNING id, title, category`,
-      [id, cleanTitle, cleanCategory],
+      [id, req.session.userId, cleanTitle, cleanCategory],
     );
 
     res.status(201).json({
@@ -110,7 +247,7 @@ app.post("/api/decks", async (req, res) => {
   }
 });
 
-app.put("/api/decks/:deckId", async (req, res) => {
+app.put("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const { title, category } = req.body;
 
@@ -131,9 +268,9 @@ app.put("/api/decks/:deckId", async (req, res) => {
     const updatedDeck = await pool.query(
       `UPDATE decks
     SET title = $1, category = $2
-    WHERE id = $3
+    WHERE id = $3 AND user_id = $4
     RETURNING id, title, category`,
-      [cleanTitle, cleanCategory, req.params.deckId],
+      [cleanTitle, cleanCategory, req.params.deckId, req.session.userId],
     );
 
     if (updatedDeck.rows.length === 0) {
@@ -147,11 +284,11 @@ app.put("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-app.delete("/api/decks/:deckId", async (req, res) => {
+app.delete("/api/decks/:deckId", requireAuth, async (req, res) => {
   try {
     const deleteDeck = await pool.query(
-      `DELETE FROM decks WHERE id = $1 RETURNING id`,
-      [req.params.deckId],
+      `DELETE FROM decks WHERE id = $1 AND user_id = $2 RETURNING id`,
+      [req.params.deckId, req.session.userId],
     );
 
     if (deleteDeck.rows.length === 0) {
@@ -166,11 +303,12 @@ app.delete("/api/decks/:deckId", async (req, res) => {
 });
 
 //  CARD ROUTES
-app.get("/api/decks/:deckId/cards", async (req, res) => {
+app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   try {
-    const deckChecker = await pool.query(`SELECT id FROM decks WHERE id = $1`, [
-      req.params.deckId,
-    ]);
+    const deckChecker = await pool.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
 
     if (deckChecker.rows.length === 0) {
       return res.status(404).json({ error: "deck not found" });
@@ -199,12 +337,12 @@ app.get("/api/decks/:deckId/cards", async (req, res) => {
   }
 });
 
-app.post("/api/decks/:deckId/cards", async (req, res) => {
+app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const deckChecker = await client.query(
-      `SELECT id FROM decks WHERE id = $1`,
-      [req.params.deckId],
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
     );
     if (deckChecker.rows.length === 0) {
       return res.status(404).json({ error: "deck not found" });
@@ -287,7 +425,7 @@ app.post("/api/decks/:deckId/cards", async (req, res) => {
   }
 });
 
-app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
+app.put("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -304,6 +442,14 @@ app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
     const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
     const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
     const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
+
+    const deckChecker = await client.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
+    if (deckChecker.rows.length === 0) {
+      return res.status(404).json({ error: "deck not found" });
+    }
 
     await client.query("BEGIN");
 
@@ -387,8 +533,16 @@ app.put("/api/decks/:deckId/cards/:cardId", async (req, res) => {
   }
 });
 
-app.delete("/api/decks/:deckId/cards/:cardId", async (req, res) => {
+app.delete("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   try {
+    const deckChecker = await pool.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [req.params.deckId, req.session.userId],
+    );
+    if (deckChecker.rows.length === 0) {
+      return res.status(404).json({ error: "deck not found" });
+    }
+
     const deleteCard = await pool.query(
       `DELETE FROM cards WHERE id = $1 AND deck_id = $2 RETURNING id`,
       [req.params.cardId, req.params.deckId],
