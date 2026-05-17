@@ -11,6 +11,61 @@ function esc(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// category stuff
+function categorySplit(category) {
+  if (!category) return [];
+  return category
+  .split(',')
+  .map(c => c.trim())
+  .filter(Boolean);
+}
+
+let selectedDeckCategories = []
+
+function fillCategorySuggestion() {
+  const datalist = document.getElementById('category-options');
+  if (!datalist) return;
+
+  const categories = [...new Set(allDecks.flatMap(d => categorySplit(d.category)))];
+
+  datalist.innerHTML = categories.map(category => ` <option value="${esc(category)}"></option>`).join('');
+}
+
+function updateCategoryPreview() {
+  const preview = document.getElementById('deck-category-preview');
+  if (!preview) return;
+
+  if (!selectedDeckCategories.length) {
+    preview.innerHTML = 'No categories selected';
+    return;
+  }
+
+  preview.innerHTML = selectedDeckCategories.map(category => `<span class="inline-flex items-center gap-1 text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"> ${esc(category)}
+      <button type="button" onclick="removeCatFromDeck('${esc(category)}')" class="text-stone-400 hover:text-red-500 font-bold"> × </button>
+    </span> `).join('');
+}
+
+function addCatToDeck() {
+  const input = document.getElementById('deck-category-input');
+  if (!input) return;
+
+  const category = input.value.trim();
+
+  if (!category) return;
+
+  if (!selectedDeckCategories.includes(category)) {
+    selectedDeckCategories.push(category);
+  }
+
+  input.value = '';
+  updateCategoryPreview();
+}
+
+function removeCatFromDeck(category) {
+  selectedDeckCategories = selectedDeckCategories.filter(c => c !== category);
+  updateCategoryPreview();
+}
+
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
     method,
@@ -49,7 +104,7 @@ async function loadDecks() {
 }
 
 function renderFilters() {
-  const categories = ['All', ...new Set(allDecks.map(d => d.category).filter(Boolean))];
+  const categories = ['All', ...new Set(allDecks.flatMap(d => categorySplit(d.category)))];
   const pills = document.getElementById('filter-pills');
   pills.innerHTML = categories.map(cat => `
     <button onclick="setFilter('${esc(cat)}')"
@@ -73,7 +128,7 @@ function setFilter(cat) {
 function renderGrid(decks = null) {
   const filtered = decks || (activeFilter === 'All'
     ? allDecks
-    : allDecks.filter(d => d.category === activeFilter));
+    : allDecks.filter(d => categorySplit(d.category).includes(activeFilter)));
 
   const grid = document.getElementById('deck-grid');
 
@@ -101,7 +156,8 @@ function renderGrid(decks = null) {
           <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 4v16M16 4v16"/>
         </svg>
       </div>
-      ${d.category ? `<span class="inline-block self-start text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full">${esc(d.category)}</span>` : '<span></span>'}
+      ${categorySplit(d.category).length ? `<div class="flex flex-wrap gap-1"> ${categorySplit(d.category).map(category => 
+        `<span class="inline-block text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"> ${esc(category)} </span> `).join('')} </div>` : '<span></span>' }
       <div class="flex items-center justify-between mt-auto pt-2">
         <span class="text-sm text-stone-400">${d.cardCount} card${d.cardCount !== 1 ? 's' : ''}</span>
         <div class="flex items-center gap-2">
@@ -126,18 +182,24 @@ function renderGrid(decks = null) {
 //  Deck Modal 
 function openNewDeckModal() {
   editingDeckId = null;
+  selectedDeckCategories = [];
   document.getElementById('deck-modal-title').textContent = 'New Deck';
   document.getElementById('deck-title-input').value = '';
   document.getElementById('deck-category-input').value = '';
+  fillCategorySuggestion();
+  updateCategoryPreview();
   openModal('deck-modal');
   setTimeout(() => document.getElementById('deck-title-input').focus(), 120);
 }
 
 function openEditDeckModal(id, title, category) {
   editingDeckId = id;
+  selectedDeckCategories = categorySplit(category || '');
   document.getElementById('deck-modal-title').textContent = 'Edit Deck';
   document.getElementById('deck-title-input').value = title;
-  document.getElementById('deck-category-input').value = category || '';
+  document.getElementById('deck-category-input').value = '';
+  fillCategorySuggestion();
+  updateCategoryPreview();
   openModal('deck-modal');
   setTimeout(() => document.getElementById('deck-title-input').focus(), 120);
 }
@@ -146,7 +208,14 @@ function closeDeckModal() { closeModal('deck-modal'); }
 
 async function saveDeck() {
   const title = document.getElementById('deck-title-input').value.trim();
-  const category = document.getElementById('deck-category-input').value.trim();
+  const categoryInput = document.getElementById('deck-category-input').value.trim();
+
+  if (categoryInput && !selectedDeckCategories.includes(categoryInput)) {
+    selectedDeckCategories.push(categoryInput);
+  }
+  
+  const category = selectedDeckCategories.join(', ');
+
   if (!title) return;
   if (editingDeckId) {
     await api('PUT', `/decks/${editingDeckId}`, { title, category });
