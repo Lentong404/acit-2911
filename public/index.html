@@ -216,8 +216,23 @@
       </div>
       <div class="mb-6">
         <label class="block text-sm font-semibold mb-2">Category <span class="font-normal text-stone-400">(optional)</span></label>
-        <input id="deck-category-input" type="text" placeholder="e.g. Programming, Languages…"
-          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+        <div class="flex gap-2">
+        <input id="deck-category-input" list="category-options" type="text"
+        placeholder="Type or select a category"
+        class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+        <button onclick="addCatToDeck()" type="button"
+        class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
+        Add
+        </button>
+      </div>
+    <datalist id="category-options"></datalist>
+  <div id="deck-category-preview"
+    class="w-full mt-3 min-h-14 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-500 flex flex-wrap gap-2">
+    No categories selected
+  </div>
+    <p class="text-xs text-stone-400 mt-2">
+    Type or select a category, click Add, then create the deck.
+    </p>
       </div>
       <div class="flex justify-end gap-3">
         <button onclick="closeDeckModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
