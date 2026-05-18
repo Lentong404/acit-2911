@@ -151,7 +151,9 @@ function renderGrid(decks = null) {
   grid.innerHTML = filtered.map(d => `
     <div class="bg-white border border-stone-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3">
       <div class="flex items-start justify-between">
-        <h3 class="font-bold text-lg leading-tight">${esc(d.title)}</h3>
+        <h3 class="font-bold text-lg leading-tight break-words whitespace-normal overflow-hidden">
+          ${esc(d.title)}
+        </h3>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" class="shrink-0 mt-0.5">
           <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 4v16M16 4v16"/>
         </svg>
