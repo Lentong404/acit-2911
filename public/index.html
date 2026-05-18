@@ -174,7 +174,7 @@
 
       <!-- Prev / Add / Next -->
       <div class="flex justify-center items-center gap-3">
-        <button id="prev-btn" onclick="prevCard()"
+        <button id="prev-btn" onclick="navigateCards('prev')"
           class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Previous
@@ -184,7 +184,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Card
         </button>
-        <button id="next-btn" onclick="nextCard()"
+        <button id="next-btn" onclick="navigateCards('next')"
           class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
           Next
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>

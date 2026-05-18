@@ -300,8 +300,25 @@ function flipCard() {
 }
 
 const flipPreviewCard = flipCard;
-function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
-function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
+// function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
+// function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
+
+function navigateCards(direction) {
+  const cardElement = document.getElementById('flashcard-inner'); 
+  cardElement.style.transform = 'rotateY(0deg)';
+  isFlipped = false;
+  playRandomSFX();
+  // delay allows animation to start/finish before the text content actually changes
+  setTimeout(() => {
+    if (direction === 'next') {
+      if (currentCardIndex < cards.length - 1) currentCardIndex++;
+    } else {
+      if (currentCardIndex > 0) currentCardIndex--;
+    }
+    renderStudyView(); 
+    
+  }, 150);
+}
 
 //  Card Modal 
 function openAddCardModal() {
@@ -390,8 +407,8 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('study-view').classList.contains('active')) return;
   if (!document.getElementById('deck-modal').classList.contains('pointer-events-none') ||
       !document.getElementById('card-modal').classList.contains('pointer-events-none')) return;
-  if (e.key === 'ArrowRight') nextCard();
-  if (e.key === 'ArrowLeft') prevCard();
+  if (e.key === 'ArrowRight') navigateCards('next');
+  if (e.key === 'ArrowLeft') navigateCards('prev');
   if (e.key === ' ') { e.preventDefault(); flipCard(); }
 });
 
