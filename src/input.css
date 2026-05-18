@@ -85,3 +85,11 @@ body.dark .hover\:bg-stone-100:hover { background-color: #d6d3d1 !important; }
 body.dark .hover\:bg-stone-700:hover { background-color: #d6d3d1 !important; }
 k .hover\:bg-stone-700:hover { background-color: #d6d3d1 !important; }
 k .hover\:bg-stone-700:hover { background-color: #d6d3d1 !important; }
+
+/* Flashcard text wrapping  */
+#card-question,
+#card-answer {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
