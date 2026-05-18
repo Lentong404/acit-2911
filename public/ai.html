@@ -6,6 +6,7 @@
   <title>AI Flashcard Assistant</title>
   <link rel="preconnect" href="googleapis.com">
   <link href="googleapis.com" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Blocking Script: Eliminates the flashing bright white screen layout issue -->
   <script>
@@ -79,8 +80,26 @@
           </div>
           <div>
             <label for="card-count-select" class="block text-xs font-semibold text-stone-500 mb-1.5">Cards to generate</label>
-            <select id="card-count-select" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 min-w-[5.5rem]">
-            </select>
+            <!-- <select id="card-count-select" value="3" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 min-w-[5.5rem]">
+            </select> -->
+            <div class="flex gap-2">
+              <input 
+                id="card-count-select" 
+                type="number" 
+                list="card-options" 
+                value="3" 
+                min="1" 
+                max="20"
+                class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 min-w-[5.5rem]"
+              />
+              <datalist id="card-options">
+                <option value="1">
+                <option value="3">
+                <option value="5">
+                <option value="10">
+                <option value="20">
+              </datalist>
+            </div>
           </div>
         </div>
         <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Save to deck</p>
@@ -130,36 +149,29 @@
 
       <!-- REMOVED 'hidden' so the workspace displays a card instantly on load -->
       <div id="preview-flip-zone" class="p-5">
-        
-           <!-- Interactive 3D Card Object Layout -->
-        <div id="preview-flip-zone" class="p-5">
-          <!-- FIXED ID: Changed from preview-flashcard-inner to flashcard-inner -->
-          <div id="flashcard-inner" class="relative w-full transition-transform duration-500 cursor-pointer" style="transform-style:preserve-3d;" onclick="flipCard()">
-            
-            <!-- Front Face: Question -->
-            <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center" style="backface-visibility: hidden; -webkit-backface-visibility: hidden;">
-              <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
-              <p id="preview-q" class="text-xl leading-relaxed text-stone-800">Your generated questions will appear here.</p>
-              <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
-            </div>
-            
-            <!-- Back Face: Answer -->
-            <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center" style="backface-visibility: hidden; -webkit-backface-visibility: hidden;">
-              <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
-              <p id="preview-a" class="text-xl leading-relaxed text-stone-100">Your generated answers will appear here.</p>
-              <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
-            </div>
-            
-            <!-- Structural Layout Spacer -->
-            <div class="invisible px-12 py-10" style="min-height:280px"></div>
+        <div id="flashcard-inner" class="relative w-full transition-transform duration-500 cursor-pointer" style="transform-style:preserve-3d;" onclick="flipCard()">
+          
+          <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center" style="backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+            <p id="card-question" class="text-xl leading-relaxed text-stone-800">Your generated questions will appear here.</p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
           </div>
+          
+          <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center" style="backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+            <p id="card-answer" class="text-xl leading-relaxed text-stone-100">Your generated answers will appear here.</p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
+          </div>
+          
+          <div class="invisible px-12 py-10" style="min-height:280px"></div>
         </div>
+      </div>
 
         <!-- Carousel Pagination Control Strip (Isolates layout click inheritance) -->
         <div class="flex justify-between items-center mt-4 p-2 bg-stone-50" onclick="event.stopPropagation();">
-          <button id="preview-prev" type="button" class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white disabled:opacity-40" disabled>Previous</button>
+          <button id="preview-prev" onclick="navigateCards('prev')" type="button" class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white disabled:opacity-40" disabled>Previous</button>
           <span id="preview-counter" class="text-xs font-medium text-stone-500 tabular-nums">1 / 1</span>
-          <button id="preview-next" type="button" class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white disabled:opacity-40" disabled>Next</button>
+          <button id="preview-next" onclick="navigateCards('next')" type="button" class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white disabled:opacity-40" disabled>Next</button>
         </div>
 
       </div>
@@ -255,10 +267,14 @@
     }
 
     function updatePreviewDisplay() {
-      if (!lastCards.length) return;
+      if (!lastCards || !lastCards.length) return;
+      
       const c = lastCards[previewIndex];
-      if (previewQ) previewQ.textContent = c.question;
-      if (previewA) previewA.textContent = c.answer;
+      const qElement = document.getElementById('card-question');
+      const aElement = document.getElementById('card-answer');
+      
+      if (qElement) qElement.textContent = c.question;
+      if (aElement) aElement.textContent = c.answer;
       if (previewInner) {
         previewInner.style.transform = previewFlipped[previewIndex] ? 'rotateY(180deg)' : 'rotateY(0deg)';
       }
@@ -275,9 +291,8 @@
     }
 
     function flipPreviewCard() {
-      // Allow flipping the card even if no AI data has been fetched yet
+      // Allow flipping the card even if no AI data has been fetched 
       if (!lastCards.length) {
-        // If previewFlipped array hasn't been filled yet, track index 0 manually
         if (previewFlipped.length === 0) previewFlipped = [false];
         previewFlipped[0] = !previewFlipped[0];
         if (previewInner) {
@@ -285,8 +300,6 @@
         }
         return;
       }
-      
-      // Standard streaming array flip fallback configuration
       previewFlipped[previewIndex] = !previewFlipped[previewIndex];
       if (previewInner) {
         previewInner.style.transform = previewFlipped[previewIndex] ? 'rotateY(180deg)' : 'rotateY(0deg)';
@@ -349,7 +362,7 @@
             modelSelect.appendChild(o);
           }
           const saved = localStorage.getItem(MODEL_STORAGE_KEY);
-          // FIXED CRITICAL TYPE ERROR: Fixed to use fallback string value, not entire raw array object reference
+
           if (saved && names.includes(saved)) modelSelect.value = saved;
           else if (names.includes(fallback)) modelSelect.value = fallback;
           else modelSelect.value = names[0];
@@ -456,73 +469,97 @@
       return div.innerHTML;
     }
 
-    async function sendPrompt() {
-      const prompt = promptInput.value.trim();
-      if (!prompt || streaming) return;
-      const model = (modelSelect.value || '').trim();
-      if (!model) {
-        showToast('Select an Ollama model first.');
-        return;
-      }
-      const cardCount = parseInt(cardCountSelect.value, 10) || 10;
-      streaming = true;
-      setGenerateBusy(true);
-      if (tokenStats) tokenStats.classList.add('hidden');
-      lastCards = [];
-      updateSaveEnabled();
-      showGeneratedStream();
-      if (streamRaw) streamRaw.textContent = '';
-      lastPrompt = prompt;
-      lastAnswerRaw = '';
-      if (statusLine) statusLine.textContent = 'Generating…';
+  async function sendPrompt() {
+  const prompt = promptInput.value.trim();
+  if (!prompt || streaming) return;
+  const model = (modelSelect.value || '').trim();
+  if (!model) {
+    showToast('Select an Ollama model first.');
+    return;
+  }
+  const cardCount = parseInt(cardCountSelect.value, 10) || 10;
+  
+  streaming = true;
+  setGenerateBusy(true);
+  if (streamRaw) streamRaw.classList.remove('hidden'); // Show the stream window
+  const previewFlipZone = document.getElementById('preview-flip-zone');
+  if (previewFlipZone) previewFlipZone.classList.add('hidden');
+  lastCards = [];
+  updateSaveEnabled();
+  showGeneratedStream();
+  if (streamRaw) streamRaw.textContent = '';
+  lastPrompt = prompt;
+  lastAnswerRaw = '';
+  if (statusLine) statusLine.textContent = 'Generating…';
 
-      try {
-        const res = await fetch('/ai-chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, cardCount, model }),
-        });
-        if (!res.body) throw new Error('Streaming not supported');
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split('\n');
-          buf = lines.pop() ?? '';
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const j = JSON.parse(line.trim());
-              if (j.response) lastAnswerRaw += j.response;
-              if (j.promptTokens) lastPromptTokens = j.promptTokens;
-              if (j.completionTokens) lastCompletionTokens = j.completionTokens;
-            } catch { /* skip */ }
-          }
-          if (streamRaw) streamRaw.textContent = lastAnswerRaw;
-        }
-
-        const parseRes = await fetch('/ai-chat/parse-cards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ raw: lastAnswerRaw }),
-        });
-        const parseBody = await parseRes.json().catch(() => ({}));
-        lastCards = parseBody.cards || [];
-        initPreviewCarousel(lastCards);
-        if (statusLine) statusLine.textContent = `Ready: ${lastCards.length} cards loaded.`;
-      } catch (e) {
-        showGeneratedEmpty();
-        showToast(e.message || 'Something went wrong');
-      } finally {
-        streaming = false;
-        setGenerateBusy(false);
-        applyTokenStats();
-        updateSaveEnabled();
+  try {
+    const res = await fetch('/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, cardCount, model }),
+    });
+    if (!res.body) throw new Error('Streaming not supported');
+    
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const j = JSON.parse(line.trim());
+          if (j.response) lastAnswerRaw += j.response;
+          if (j.promptTokens) lastPromptTokens = j.promptTokens;
+          if (j.completionTokens) lastCompletionTokens = j.completionTokens;
+        } catch { /* skip */ }
       }
+      if (streamRaw) streamRaw.textContent = lastAnswerRaw;
     }
+
+    const parseRes = await fetch('/ai-chat/parse-cards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: lastAnswerRaw }),
+    });
+    
+    const parseBody = await parseRes.json().catch(() => ({}));
+
+    if (parseBody.cards && parseBody.cards.length > 0) {
+      lastCards = parseBody.cards;
+      previewIndex = 0; 
+
+      if (streamRaw) streamRaw.classList.add('hidden');
+
+      const previewFlipZone = document.getElementById('preview-flip-zone');
+      if (previewFlipZone) {
+          previewFlipZone.classList.remove('hidden');
+      }
+
+      initPreviewCarousel(lastCards); 
+      updatePreviewDisplay();
+      
+      if (statusLine) statusLine.textContent = `Ready: ${lastCards.length} cards loaded.`;
+    } else {
+      showGeneratedEmpty();
+      throw new Error("No cards were found in the AI response.");
+    }
+
+  } catch (e) {
+    showGeneratedEmpty();
+    showToast(e.message || 'Something went wrong');
+  } finally {
+    streaming = false;
+    setGenerateBusy(false);
+    applyTokenStats();
+    updateSaveEnabled();
+  }
+}
 
     async function ensureDeckId() {
       if (deckSelect.value === '__new__') {
@@ -566,14 +603,43 @@
       if (container) container.classList.toggle('hidden');
     }
 
+    function navigatePreview(direction) {
+      const inner = document.getElementById('flashcard-inner');
+
+      if (inner) {
+        inner.style.transform = 'rotateY(0deg)';
+      }
+      isFlipped = false; 
+
+      setTimeout(() => {
+        if (direction === 'next') {
+          if (previewIndex < lastCards.length - 1) previewIndex++;
+        } else {
+          if (previewIndex > 0) previewIndex--;
+        }
+
+        updatePreviewDisplay(); }, 150);
+    }
+
     if (deckSelect) deckSelect.addEventListener('change', syncNewDeckRow);
     if (newDeckTitle) newDeckTitle.addEventListener('input', updateSaveEnabled);
     if (newDeckCategory) newDeckCategory.addEventListener('change', () => { syncNewDeckCategoryCustom(); updateSaveEnabled(); });
     if (previewFlipZone) previewFlipZone.addEventListener('click', flipPreviewCard);
-    if (previewPrev) previewPrev.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex > 0) { previewIndex--; updatePreviewDisplay(); } });
-    if (previewNext) previewNext.addEventListener('click', (e) => { e.stopPropagation(); if (previewIndex < lastCards.length - 1) { previewIndex++; updatePreviewDisplay(); } });
-    // Execution commands initialization
-    // Auth check before doing anything else
+
+    if (previewPrev) {
+      previewPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigatePreview('prev');
+      });
+    }
+
+    if (previewNext) {
+      previewNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigatePreview('next');
+      });
+    }
+    
     (async function () {
       try {
         const res = await fetch('/api/auth/me');

@@ -18,14 +18,27 @@ button:disabled { opacity: 0.35; pointer-events: none; }
   transform-style: preserve-3d;
   transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
   min-height: 280px;
+  
 }
 .card-face {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  @apply select-none;
   
 }
 .card-back {
   transform: rotateY(180deg);
+}
+
+/* Removes the extra 'datalist' arrow from the number input */
+#card-count-select::-webkit-calendar-picker-indicator {
+    display: none !important;
+    opacity: 0;
+}
+
+button {
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Nocturne Ult */
