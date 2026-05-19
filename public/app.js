@@ -5,6 +5,9 @@ let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
 let selectedType = 'basic'; // Default state is basic
+let quizMode = false;
+let quizAnswered = false;
+let mcqFlipped = false;
 
 // prevents crash on loading decks
 function esc(str) {
@@ -260,15 +263,110 @@ function renderStudyView() {
   }
   if (currentCardIndex >= cards.length) currentCardIndex = cards.length - 1;
   if (currentCardIndex < 0) currentCardIndex = 0;
+
   const card = cards[currentCardIndex];
-  document.getElementById('card-question').textContent = card.question;
-  document.getElementById('card-answer').textContent = card.answer;
+  const isMcq = card.cardType === 'multiple_choice';
+
   document.getElementById('card-counter').textContent = `Card ${currentCardIndex + 1} of ${cards.length}`;
   document.getElementById('progress-fill').style.width = `${((currentCardIndex + 1) / cards.length) * 100}%`;
   document.getElementById('prev-btn').disabled = currentCardIndex === 0;
   document.getElementById('next-btn').disabled = currentCardIndex === cards.length - 1;
-  isFlipped = false;
-  document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
+
+  const flipWrapper = document.getElementById('flashcard-inner').closest('[style*="perspective"]');
+  const mcqView    = document.getElementById('mcq-view');
+  const quizWidget = document.getElementById('quiz-widget');
+
+  flipWrapper.classList.add('hidden');
+  mcqView.classList.add('hidden');
+  quizWidget.classList.add('hidden');
+
+  if (isMcq && quizMode) {
+    quizWidget.classList.remove('hidden');
+    quizAnswered = false;
+    renderQuizWidget(card);
+  } else if (isMcq) {
+    mcqView.classList.remove('hidden');
+    mcqFlipped = false;
+    mcqView.querySelector('.mcq-card').classList.remove('mcq-card--flipped');
+    renderMcqView(card);
+  } else {
+    flipWrapper.classList.remove('hidden');
+    document.getElementById('card-question').textContent = card.question;
+    document.getElementById('card-answer').textContent = card.answer;
+    isFlipped = false;
+    document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
+  }
+}
+
+function renderMcqView(card) {
+  document.getElementById('mcq-question').textContent = card.question;
+  const labels = 'ABCDE';
+  const display = document.getElementById('mcq-choices-display');
+  display.innerHTML = '';
+  card.choices.forEach((ch, i) => {
+    const item = document.createElement('div');
+    item.className = 'mcq-choice-item' + (ch.isCorrect ? ' mcq-choice-item--correct' : '');
+    item.innerHTML = `<span class="mcq-choice-item__letter">${labels[i] ?? i + 1}</span><span class="mcq-choice-item__text">${esc(ch.choiceText)}</span>`;
+    display.appendChild(item);
+  });
+}
+
+function flipMcqCard() {
+  mcqFlipped = !mcqFlipped;
+  document.getElementById('mcq-view').querySelector('.mcq-card').classList.toggle('mcq-card--flipped', mcqFlipped);
+  if (mcqFlipped) playRandomSFX();
+}
+
+function renderQuizWidget(card) {
+  document.getElementById('quiz-question').textContent = card.question;
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.className = 'quiz-feedback hidden';
+  feedback.textContent = '';
+  const choicesEl = document.getElementById('quiz-choices');
+  choicesEl.innerHTML = '';
+  const labels = 'ABCDE';
+  card.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-choice-btn';
+    btn.innerHTML = `<span class="quiz-choice-btn__letter">${labels[i] ?? i + 1}</span>${esc(ch.choiceText)}`;
+    btn.onclick = () => answerQuiz(card, i);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function answerQuiz(card, selectedIndex) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const buttons = document.querySelectorAll('.quiz-choice-btn');
+  buttons.forEach((btn, i) => {
+    btn.onclick = null;
+    if (card.choices[i].isCorrect) {
+      btn.classList.add('quiz-choice-btn--correct');
+    } else if (i === selectedIndex) {
+      btn.classList.add('quiz-choice-btn--wrong');
+    } else {
+      btn.classList.add('quiz-choice-btn--dimmed');
+    }
+  });
+  const correct = card.choices[selectedIndex].isCorrect;
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.classList.remove('hidden');
+  if (correct) {
+    feedback.textContent = '✓ Correct!';
+    feedback.className = 'quiz-feedback quiz-feedback--correct';
+  } else {
+    const correctChoice = card.choices.find(c => c.isCorrect);
+    feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
+    feedback.className = 'quiz-feedback quiz-feedback--wrong';
+  }
+  playRandomSFX();
+}
+
+function toggleQuizMode() {
+  quizMode = !quizMode;
+  document.getElementById('quiz-mode-label').textContent = quizMode ? 'Quiz mode: On' : 'Quiz mode: Off';
+  document.getElementById('quiz-mode-btn').classList.toggle('active', quizMode);
+  renderStudyView();
 }
 
 // Sound effects library file inventory mapping
@@ -306,20 +404,28 @@ const flipPreviewCard = flipCard;
 // function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
 function navigateCards(direction) {
-  const cardElement = document.getElementById('flashcard-inner'); 
+  const cardElement = document.getElementById('flashcard-inner');
+
+  // Suppress transition so the new card snaps directly to question-side with no animation
+  cardElement.style.transition = 'none';
   cardElement.style.transform = 'rotateY(0deg)';
   isFlipped = false;
+
+  if (direction === 'next') {
+    if (currentCardIndex < cards.length - 1) currentCardIndex++;
+  } else {
+    if (currentCardIndex > 0) currentCardIndex--;
+  }
+
+  renderStudyView();
   playRandomSFX();
-  // delay allows animation to start/finish before the text content actually changes
-  setTimeout(() => {
-    if (direction === 'next') {
-      if (currentCardIndex < cards.length - 1) currentCardIndex++;
-    } else {
-      if (currentCardIndex > 0) currentCardIndex--;
-    }
-    renderStudyView(); 
-    
-  }, 150);
+
+  // Re-enable the flip transition after the frame has painted
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cardElement.style.transition = '';
+    });
+  });
 }
 
 //  Card Modal 
@@ -400,7 +506,7 @@ async function saveCard() {
       const input = row.querySelector('.choice-text');
       // Locked T/F rows store lowercase in data-save-value; regular rows use the input value
       const text = input.dataset.saveValue ?? input.value;
-      const correct = row.querySelector('input[type="radio"]').checked;
+      const correct = row.querySelector('.choice-checker')?.getAttribute('data-correct') === 'true';
       if (text.trim()) choices.push({ choiceText: text, isCorrect: correct });
     });
     // Derive answer from the correct choice (answer column is NOT NULL in DB)
@@ -678,7 +784,7 @@ function snapshotMcqChoices() {
   const rows = document.querySelectorAll('#choices-list > div');
   cachedMcqChoices = Array.from(rows).map(row => ({
     text: row.querySelector('.choice-text').value,
-    isCorrect: row.querySelector('input[type="radio"]').checked
+    isCorrect: row.querySelector('.choice-checker')?.getAttribute('data-correct') === 'true'
   }));
 }
 
@@ -691,6 +797,12 @@ document.getElementById('card-type-group').addEventListener('click', (e) => {
 
   // Snapshot MCQ choices before switching away from MCQ
   if (selectedType === 'multiple_choice') snapshotMcqChoices();
+
+  // When switching from basic to MCQ, seed the answer as the first choice
+  if (selectedType === 'basic' && newType === 'multiple_choice' && !isActive) {
+    const answer = document.getElementById('card-answer-input').value.trim();
+    if (answer) cachedMcqChoices = [{ text: answer, isCorrect: true }];
+  }
 
   document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
 
@@ -742,49 +854,37 @@ function addChoiceRow(text = '', isCorrect = false, opts = {}) {
   const { label = null, locked = false } = opts;
   const displayValue = label ?? text;
   const list = document.getElementById('choices-list');
-  const row = document.createElement('div');
-  row.className = "flex items-center gap-2";
-  row.innerHTML = `
-    <input type="radio" name="mcq-correct" ${isCorrect ? 'checked' : ''} class="w-4 h-4 text-stone-900">
-    <input type="text" class="choice-text flex-1 p-2 border border-stone-200 rounded-lg text-sm${locked ? ' bg-stone-100 text-stone-500 cursor-default' : ''}"
-      placeholder="Choice text..." value="${locked ? displayValue : text}"${locked ? ' readonly' : ''}>
-    ${locked ? '<span class="w-5"></span>' : '<button type="button" class="text-stone-400 hover:text-red-500" onclick="this.parentElement.remove()">✕</button>'}
-  `;
-  // For locked T/F rows, store the lowercase save value in a data attribute
-  if (locked) row.querySelector('.choice-text').dataset.saveValue = text;
+
+  // Clone the appropriate template — all markup and classes live in index.html
+  const templateId = locked ? 'choice-row-locked-template' : 'choice-row-template';
+  const row = document.getElementById(templateId).content.cloneNode(true).firstElementChild;
+
+  const checker = row.querySelector('.choice-checker');
+  const input   = row.querySelector('.choice-text');
+
+  // Set initial checked state
+  setCheckerState(checker, isCorrect);
+  const selectChecker = () => {
+    list.querySelectorAll('.choice-checker').forEach(btn => setCheckerState(btn, false));
+    setCheckerState(checker, true);
+  };
+  checker.addEventListener('click', selectChecker);
+  checker.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectChecker(); }
+  });
+
+  // Set input value
+  input.value = locked ? displayValue : text;
+  if (locked) input.dataset.saveValue = text;
+
+  // Wire delete button (only present in non-locked template)
+  row.querySelector('.choice-delete')?.addEventListener('click', () => row.remove());
+
   list.appendChild(row);
 }
 
-async function handleSaveCard() {
-  const question = document.getElementById('card-question').value;
-  const answer = document.getElementById('card-answer').value;
-  
-  let finalType = selectedType;
-  let choices = [];
-
-  if (selectedType === 'true_false') {
-    // Convert T/F to MCQ for backend compatibility
-    finalType = 'multiple_choice';
-    const isTrue = answer.toLowerCase().trim() === 'true';
-    choices = [
-      { choiceText: 'True', isCorrect: isTrue },
-      { choiceText: 'False', isCorrect: !isTrue }
-    ];
-  } else if (selectedType === 'multiple_choice') {
-    const rows = document.querySelectorAll('#choices-list div');
-    rows.forEach(row => {
-      choices.push({
-        choiceText: row.querySelector('.choice-text').value,
-        isCorrect: row.querySelector('input[type="radio"]').checked
-      });
-    });
-  }
-
-  const payload = {
-    question,
-    answer,
-    cardType: finalType, // Matches card_type alias in server.js
-    choices
-  };
-  saveCard();
+function setCheckerState(checker, isCorrect) {
+  checker.setAttribute('data-correct', isCorrect ? 'true' : 'false');
+  checker.setAttribute('aria-pressed', isCorrect ? 'true' : 'false');
+  checker.classList.toggle('choice-checker--checked', isCorrect);
 }
