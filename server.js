@@ -337,196 +337,162 @@ app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   }
 });
 
+
 app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
-  const client = await pool.connect();
+  const { deckId } = req.params;
+  const { question, answer, card_type, cardType, choices = [] } = req.body;
+  
+  // Support both snake_case and camelCase for the card type input
+  const finalType = card_type || cardType || 'basic';
+  const userId = req.session.userId; 
+  const cardId = `card-${uuidv4()}`;
+
+  const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
+  const cleanQuestion = DOMPurify.sanitize((question || '').trim(), sanitizeOpts);
+  const cleanAnswer = DOMPurify.sanitize((answer || '').trim(), sanitizeOpts);
+
+  if (!cleanQuestion || !cleanAnswer) {
+    return res.status(400).json({ error: "Valid question and answer required" });
+  }
+
+  const client = await pool.connect(); 
   try {
-    const deckChecker = await client.query(
-      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
-      [req.params.deckId, req.session.userId],
+    const deckCheck = await client.query(
+      "SELECT id FROM decks WHERE id = $1 AND user_id = $2",
+      [deckId, userId]
     );
-    if (deckChecker.rows.length === 0) {
+
+    if (deckCheck.rowCount === 0) {
       return res.status(404).json({ error: "deck not found" });
     }
 
-    const {
-      question,
-      answer,
-      cardType = req.body.card_type || "basic",
-      choices = req.body.card_choices || req.body.choices || [],
-    } = req.body;
+    await client.query('BEGIN');
 
-    if (!question || !answer) {
-      return res.status(400).json({ error: "Question and answer required" });
-    }
-
-    if (!["basic", "multiple_choice", "true_false"].includes(cardType)) {
-      return res.status(400).json({ error: "Invalid card type layout" });
-    }
-
-    const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
-    const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
-    const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
-
-    if (!cleanQuestion || !cleanAnswer) {
-      return res
-        .status(400)
-        .json({ error: "Valid question and answer required" });
-    }
-
-    await client.query("BEGIN");
-
-    const cardId = `card-` + uuidv4();
-
-    const { rows: cardRows } = await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, question, answer, card_type AS "cardType"`,
-      [cardId, req.params.deckId, cleanQuestion, cleanAnswer, cardType],
+    // 1. Insert the Card
+    await client.query(
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, $5)`,
+      [cardId, deckId, cleanQuestion, cleanAnswer, finalType]
     );
 
-    const packedChoices = [];
-    if (cardType === "multiple_choice" && Array.isArray(choices)) {
+    // 2. Insert choices if multiple choice (handling both underscore and hyphen naming)
+    const isMultipleChoice = finalType.replace('-', '_') === 'multiple_choice';
+
+    if (isMultipleChoice && Array.isArray(choices)) {
       for (const choice of choices) {
-        const rawText = choice.choice_text || choice.choiceText;
-        if (!rawText || !rawText.trim()) continue;
-
-        const cleanChoiceText = DOMPurify.sanitize(
-          rawText.trim(),
-          sanitizeOpts,
-        );
-        const choiceId = `choice-` + uuidv4();
-        const rawCorrect =
-          choice.is_correct !== undefined
-            ? choice.is_correct
-            : choice.isCorrect;
-
-        const { rows: choiceRows } = await client.query(
-          `INSERT INTO card_choices (id, card_id, choice_text, is_correct)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id, choice_text AS "choiceText", is_correct AS "isCorrect"`,
-          [choiceId, cardId, cleanChoiceText, !!rawCorrect],
-        );
-
-        packedChoices.push(choiceRows[0]);
+        const rawText = choice.choice_text || choice.choiceText || '';
+        const isCorrect = choice.is_correct !== undefined ? choice.is_correct : choice.isCorrect;
+        
+        if (rawText.trim()) {
+          const cleanChoiceText = DOMPurify.sanitize(rawText.trim(), sanitizeOpts);
+          await client.query(
+            `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+            [`choice-${uuidv4()}`, cardId, cleanChoiceText, !!isCorrect]
+          );
+        }
       }
     }
 
-    await client.query("COMMIT");
+    await client.query('COMMIT');
 
-    res.status(201).json({ ...cardRows[0], choices: packedChoices });
+    // 3. Fetch the full object using json_build_object to guarantee key casing
+    const finalCardResult = await client.query(`
+      SELECT 
+        c.id, 
+        c.question, 
+        c.answer, 
+        c.card_type AS "cardType",
+        COALESCE(
+          (SELECT json_agg(
+            json_build_object(
+              'id', cc.id, 
+              'choiceText', cc.choice_text, 
+              'isCorrect', cc.is_correct
+            ) ORDER BY cc.id ASC
+          ) FROM card_choices cc WHERE cc.card_id = c.id), '[]'
+        ) AS choices
+      FROM cards c
+      WHERE c.id = $1
+    `, [cardId]);
+
+    res.status(201).json(finalCardResult.rows[0]);
+
   } catch (err) {
-    try {
-      await client.query("ROLLBACK");
-    } catch (_) {}
-    console.error("error creating card structural assets", err);
-    res.status(500).json({ error: "database error" });
+    try { await client.query('ROLLBACK'); } catch (e) {}
+    console.error("Error creating card:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "database error" });
+    }
   } finally {
     client.release();
   }
 });
 
+
 app.put("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
+  const { deckId, cardId } = req.params;
+  const { question, answer, card_type = 'basic', choices = [] } = req.body;
+  const userId = req.session.userId;
+  const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
+  const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
+  const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
+
+  if (!cleanQuestion || !cleanAnswer) {
+    return res.status(400).json({ error: "Valid question and answer required" });
+  }
+
   const client = await pool.connect();
   try {
-    const {
-      question,
-      answer,
-      cardType = req.body.card_type,
-      choices = req.body.card_choices || req.body.choices || [],
-    } = req.body;
-
-    if (!question || !answer) {
-      return res.status(400).json({ error: "Question and answer required" });
+    await client.query('BEGIN');
+const updateCardQuery = `
+      UPDATE cards 
+      SET question = $1, answer = $2, card_type = $3
+      WHERE id = $4 
+      AND deck_id = (SELECT id FROM decks WHERE id = $5 AND user_id = $6)
+      RETURNING id, question, answer, card_type AS "cardType"
+    `;
+    const result = await client.query(updateCardQuery, [cleanQuestion, cleanAnswer, card_type, cardId, deckId, userId]);
+    if (result.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: "Card not found" });
     }
 
-    const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
-    const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
-    const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
+    // Clear old choices 
+    await client.query('DELETE FROM card_choices WHERE card_id = $1', [cardId]);
 
-    const deckChecker = await client.query(
-      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
-      [req.params.deckId, req.session.userId],
-    );
-    if (deckChecker.rows.length === 0) {
-      return res.status(404).json({ error: "deck not found" });
-    }
-
-    await client.query("BEGIN");
-
-    const currentCheck = await client.query(
-      `SELECT card_type FROM cards WHERE id = $1 AND deck_id = $2`,
-      [req.params.cardId, req.params.deckId],
-    );
-
-    if (currentCheck.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "card not found" });
-    }
-
-    const finalCardType = cardType || currentCheck.rows[0].card_type;
-
-    if (!["basic", "multiple_choice", "true_false"].includes(finalCardType)) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Invalid card type layout" });
-    }
-
-    const updateCard = await client.query(
-      `UPDATE cards
-       SET question = $1, answer = $2, card_type = $3
-       WHERE id = $4 AND deck_id = $5
-       RETURNING id, question, answer, card_type AS "cardType"`,
-      [
-        cleanQuestion,
-        cleanAnswer,
-        finalCardType,
-        req.params.cardId,
-        req.params.deckId,
-      ],
-    );
-
-    const currentCard = updateCard.rows[0];
-    const updatedChoices = [];
-
-    if (finalCardType === "multiple_choice") {
-      await client.query(`DELETE FROM card_choices WHERE card_id = $1`, [
-        req.params.cardId,
-      ]);
-
-      if (Array.isArray(choices)) {
-        for (const choice of choices) {
-          const rawText = choice.choice_text || choice.choiceText;
-          if (!rawText || !rawText.trim()) continue;
-
-          const cleanTxt = DOMPurify.sanitize(rawText.trim(), sanitizeOpts);
-          const choiceId = `choice-` + uuidv4();
-
-          const rawCorrect =
-            choice.is_correct !== undefined
-              ? choice.is_correct
-              : choice.isCorrect;
-
-          const added = await client.query(
-            `INSERT INTO card_choices (id, card_id, choice_text, is_correct)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, choice_text AS "choiceText", is_correct AS "isCorrect"`,
-            [choiceId, req.params.cardId, cleanTxt, !!rawCorrect],
+    // Insert new choices if MCQ — accept both camelCase and snake_case from client
+    if (card_type === 'multiple_choice' && choices.length > 0) {
+      for (const choice of choices) {
+        const rawText = choice.choiceText || choice.choice_text || '';
+        const isCorrect = choice.isCorrect !== undefined ? choice.isCorrect : choice.is_correct;
+        const cleanChoiceText = DOMPurify.sanitize(rawText.trim(), sanitizeOpts);
+        if (cleanChoiceText) {
+          await client.query(
+            `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+            [`choice-${uuidv4()}`, cardId, cleanChoiceText, !!isCorrect]
           );
-          updatedChoices.push(added.rows[0]);
         }
       }
-    } else {
-      await client.query(`DELETE FROM card_choices WHERE card_id = $1`, [
-        req.params.cardId,
-      ]);
     }
 
-    await client.query("COMMIT");
-    res.json({ ...currentCard, choices: updatedChoices });
+    await client.query('COMMIT');
+
+    // Re-fetch the full card with choices so the client gets consistent data
+    const finalCard = await client.query(`
+      SELECT
+        c.id, c.question, c.answer, c.card_type AS "cardType",
+        COALESCE(
+          (SELECT json_agg(
+            json_build_object('id', cc.id, 'choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
+            ORDER BY cc.id ASC
+          ) FROM card_choices cc WHERE cc.card_id = c.id), '[]'
+        ) AS choices
+      FROM cards c WHERE c.id = $1
+    `, [cardId]);
+
+    res.json(finalCard.rows[0]);
   } catch (err) {
-    try {
-      await client.query("ROLLBACK");
-    } catch (_) {}
-    console.error("error updating structured cards", err);
+    await client.query('ROLLBACK');
+    console.error("Error updating card:", err);
     res.status(500).json({ error: "database error" });
   } finally {
     client.release();
@@ -579,7 +545,7 @@ async function printStartupMetrics() {
     console.log("📊 SYSTEM STARTUP STATUS DATA DIAGNOSTIC:");
     console.log(`   • Users Registered:  ${row.users}`);
     console.log(`   • Decks Configured:  ${row.decks}`);
-    console.log(`   • Cards Ingested:    ${row.cards} [Polymorphic Matrix]`);
+    console.log(`   • Cards Ingested:    ${row.cards}`);
     console.log(`   • Multiple Choices:  ${row.choices}`);
     console.log(`   • DB Query Time:     ${durationMs}ms`);
     console.log("-----------------------------------------");

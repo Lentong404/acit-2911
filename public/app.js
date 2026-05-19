@@ -4,6 +4,7 @@ let editingDeckId = null, editingCardId = null;
 let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
+let selectedType = 'basic'; // Default state is basic
 
 // prevents crash on loading decks
 function esc(str) {
@@ -271,7 +272,6 @@ function renderStudyView() {
 // Sound effects library file inventory mapping
 const SFX_FILES = [
   "wooshlong1.wav",
-  "wooshlong2.wav",
   "wooshshort1.wav",
   "wooshshort2.wav",
   "wooshshortdash6.wav",
@@ -323,9 +323,14 @@ function navigateCards(direction) {
 //  Card Modal 
 function openAddCardModal() {
   editingCardId = null;
+  selectedType = 'basic';
   document.getElementById('card-modal-title').textContent = 'Add Card';
   document.getElementById('card-question-input').value = '';
   document.getElementById('card-answer-input').value = '';
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('choices-list').innerHTML = '';
+  cachedMcqChoices = [];
+  toggleUISections('basic');
   openModal('card-modal');
   setTimeout(() => document.getElementById('card-question-input').focus(), 120);
 }
@@ -337,6 +342,36 @@ function openEditCardModal() {
   document.getElementById('card-modal-title').textContent = 'Edit Card';
   document.getElementById('card-question-input').value = c.question;
   document.getElementById('card-answer-input').value = c.answer;
+
+  // Detect T/F: multiple_choice with exactly the choices 'true' and 'false' (lowercase)
+  const choiceTexts = c.choices.map(ch => ch.choiceText);
+  const isTrueFalse = c.cardType === 'multiple_choice' &&
+    c.choices.length === 2 &&
+    choiceTexts.includes('true') && choiceTexts.includes('false');
+
+  const logicalType = isTrueFalse ? 'true_false' : (c.cardType || 'basic');
+  selectedType = logicalType;
+  cachedMcqChoices = []; // clear cache when opening a card for editing
+
+  // Activate the correct type button
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === logicalType);
+  });
+
+  // Call toggleUISections first (it seeds blank rows), then overwrite with real card data
+  toggleUISections(logicalType);
+
+  if (logicalType === 'multiple_choice') {
+    document.getElementById('choices-list').innerHTML = '';
+    c.choices.forEach(ch => addChoiceRow(ch.choiceText, ch.isCorrect));
+  } else if (logicalType === 'true_false') {
+    document.getElementById('choices-list').innerHTML = '';
+    const trueChoice  = c.choices.find(ch => ch.choiceText === 'true');
+    const falseChoice = c.choices.find(ch => ch.choiceText === 'false');
+    addChoiceRow('true',  trueChoice?.isCorrect  ?? false, { label: 'True',  locked: true });
+    addChoiceRow('false', falseChoice?.isCorrect ?? false, { label: 'False', locked: true });
+  }
+
   openModal('card-modal');
   setTimeout(() => document.getElementById('card-question-input').focus(), 120);
 }
@@ -344,22 +379,69 @@ function openEditCardModal() {
 function closeCardModal() { closeModal('card-modal'); }
 
 async function saveCard() {
-  const q = document.getElementById('card-question-input').value.trim();
-  const a = document.getElementById('card-answer-input').value.trim();
-  if (!q || !a) return;
-  if (editingCardId) {
-    const u = await api('PUT', `/decks/${currentDeckId}/cards/${editingCardId}`, { question: q, answer: a });
-    const i = cards.findIndex(c => c.id === editingCardId);
-    if (i !== -1) cards[i] = u;
-    showToast('Card saved ✓');
-  } else {
-    const n = await api('POST', `/decks/${currentDeckId}/cards`, { question: q, answer: a });
-    cards.push(n);
-    currentCardIndex = cards.length - 1;
-    showToast('Card added ✓');
+  const question = document.getElementById('card-question-input').value.trim();
+  const isMcqLike = selectedType === 'multiple_choice' || selectedType === 'true_false';
+
+  if (!question) {
+    showToast("Please enter a question!");
+    return;
   }
-  closeCardModal();
-  renderStudyView();
+
+  let finalType = selectedType;
+  let choices = [];
+  let answer = document.getElementById('card-answer-input').value.trim();
+
+  if (isMcqLike) {
+    finalType = 'multiple_choice';
+    const rows = document.querySelectorAll('#choices-list > div');
+    rows.forEach(row => {
+      const input = row.querySelector('.choice-text');
+      // Locked T/F rows store lowercase in data-save-value; regular rows use the input value
+      const text = input.dataset.saveValue ?? input.value;
+      const correct = row.querySelector('input[type="radio"]').checked;
+      if (text.trim()) choices.push({ choiceText: text, isCorrect: correct });
+    });
+    // Derive answer from the correct choice (answer column is NOT NULL in DB)
+    const correctChoice = choices.find(c => c.isCorrect);
+    answer = correctChoice ? correctChoice.choiceText : (choices[0]?.choiceText ?? '');
+  } else {
+    if (!answer) {
+      showToast("Please fill out both sides!");
+      return;
+    }
+  }
+
+  const data = {
+    question,
+    answer,
+    card_type: finalType,
+    choices
+  };
+
+  try {
+    if (editingCardId) {
+      await api('PUT', `/decks/${currentDeckId}/cards/${editingCardId}`, data);
+      showToast("Card updated!");
+    } else {
+      await api('POST', `/decks/${currentDeckId}/cards`, data);
+      showToast("Card created!");
+    }
+
+    const savedIndex = currentCardIndex; //save current index to return to after edit
+    closeCardModal(); 
+    
+    await openDeck(currentDeckId) //reopen deck to refresh cards list and re-render study view with updated data
+    if (editingCardId) { // If editing a card, return to saved index 
+      currentCardIndex = savedIndex;} else {  
+      currentCardIndex = cards.length - 1; // if adding new card, jump to end of list to see it
+    }
+    renderStudyView(); // Redraw the card and the buttons
+    showToast("Card saved successfully");
+    
+  } catch (err) {
+    console.error("Save failed:", err);
+    showToast("Failed to save card");
+  }
 }
 
 async function deleteCurrentCard() {
@@ -577,4 +659,130 @@ async function doLogout() {
   } finally {
     window.location.href = '/login.html';
   }
+}
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadDecks();
+  document.getElementById('add-choice-btn')?.addEventListener('click', () => addChoiceRow());
+});
+
+
+// Stores MCQ rows locally when the user switches away, so they aren't lost
+let cachedMcqChoices = [];
+
+function snapshotMcqChoices() {
+  const rows = document.querySelectorAll('#choices-list > div');
+  cachedMcqChoices = Array.from(rows).map(row => ({
+    text: row.querySelector('.choice-text').value,
+    isCorrect: row.querySelector('input[type="radio"]').checked
+  }));
+}
+
+document.getElementById('card-type-group').addEventListener('click', (e) => {
+  const clickedBtn = e.target.closest('.type-btn');
+  if (!clickedBtn) return;
+
+  const newType = clickedBtn.dataset.type;
+  const isActive = clickedBtn.classList.contains('active');
+
+  // Snapshot MCQ choices before switching away from MCQ
+  if (selectedType === 'multiple_choice') snapshotMcqChoices();
+
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+
+  if (isActive) {
+    selectedType = 'basic';
+  } else {
+    clickedBtn.classList.add('active');
+    selectedType = newType;
+  }
+
+  toggleUISections(selectedType);
+});
+
+function toggleUISections(type) {
+  const mcqContainer = document.getElementById('mcq-options-container');
+  const addChoiceBtn = document.getElementById('add-choice-btn');
+  const answerWrapper = document.getElementById('answer-field-wrapper');
+  const list = document.getElementById('choices-list');
+  const isMcqLike = type === 'multiple_choice' || type === 'true_false';
+
+  // Hide the answer field for MCQ/T/F — the correct radio button IS the answer
+  if (answerWrapper) answerWrapper.classList.toggle('hidden', isMcqLike);
+
+  if (type === 'multiple_choice') {
+    mcqContainer.classList.remove('hidden');
+    addChoiceBtn.classList.remove('hidden');
+    list.innerHTML = '';
+    // Restore cached choices, or seed two blank rows
+    if (cachedMcqChoices.length > 0) {
+      cachedMcqChoices.forEach(c => addChoiceRow(c.text, c.isCorrect));
+    } else {
+      addChoiceRow();
+      addChoiceRow();
+    }
+  } else if (type === 'true_false') {
+    mcqContainer.classList.remove('hidden');
+    addChoiceBtn.classList.add('hidden');
+    list.innerHTML = '';
+    // Stored lowercase, displayed title-case, locked (no delete)
+    addChoiceRow('true', false, { label: 'True', locked: true });
+    addChoiceRow('false', false, { label: 'False', locked: true });
+  } else {
+    // basic
+    mcqContainer.classList.add('hidden');
+  }
+}
+
+function addChoiceRow(text = '', isCorrect = false, opts = {}) {
+  const { label = null, locked = false } = opts;
+  const displayValue = label ?? text;
+  const list = document.getElementById('choices-list');
+  const row = document.createElement('div');
+  row.className = "flex items-center gap-2";
+  row.innerHTML = `
+    <input type="radio" name="mcq-correct" ${isCorrect ? 'checked' : ''} class="w-4 h-4 text-stone-900">
+    <input type="text" class="choice-text flex-1 p-2 border border-stone-200 rounded-lg text-sm${locked ? ' bg-stone-100 text-stone-500 cursor-default' : ''}"
+      placeholder="Choice text..." value="${locked ? displayValue : text}"${locked ? ' readonly' : ''}>
+    ${locked ? '<span class="w-5"></span>' : '<button type="button" class="text-stone-400 hover:text-red-500" onclick="this.parentElement.remove()">✕</button>'}
+  `;
+  // For locked T/F rows, store the lowercase save value in a data attribute
+  if (locked) row.querySelector('.choice-text').dataset.saveValue = text;
+  list.appendChild(row);
+}
+
+async function handleSaveCard() {
+  const question = document.getElementById('card-question').value;
+  const answer = document.getElementById('card-answer').value;
+  
+  let finalType = selectedType;
+  let choices = [];
+
+  if (selectedType === 'true_false') {
+    // Convert T/F to MCQ for backend compatibility
+    finalType = 'multiple_choice';
+    const isTrue = answer.toLowerCase().trim() === 'true';
+    choices = [
+      { choiceText: 'True', isCorrect: isTrue },
+      { choiceText: 'False', isCorrect: !isTrue }
+    ];
+  } else if (selectedType === 'multiple_choice') {
+    const rows = document.querySelectorAll('#choices-list div');
+    rows.forEach(row => {
+      choices.push({
+        choiceText: row.querySelector('.choice-text').value,
+        isCorrect: row.querySelector('input[type="radio"]').checked
+      });
+    });
+  }
+
+  const payload = {
+    question,
+    answer,
+    cardType: finalType, // Matches card_type alias in server.js
+    choices
+  };
+  saveCard();
 }

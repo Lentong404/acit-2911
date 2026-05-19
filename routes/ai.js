@@ -16,7 +16,7 @@ const PURIFY_OPTS = { FORBID_TAGS: ["style", "script", "iframe"] };
 function clampCardCount(n) {
   const x = parseInt(String(n), 10);
   if (Number.isNaN(x)) return 1;
-  return Math.min(25, Math.max(1, x));
+  return Math.min(20, Math.max(1, x));
 }
 
 /** Pull a JSON array of {question, answer} from model output (may include markdown fences or prose). */
