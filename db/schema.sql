@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS share_tokens;
 DROP TABLE IF EXISTS card_choices;
 DROP TABLE IF EXISTS cards;
 DROP TABLE IF EXISTS decks;
