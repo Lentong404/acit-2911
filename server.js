@@ -302,6 +302,76 @@ app.delete("/api/decks/:deckId", requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/decks/:id/share — create or retrieve share link for a deck
+// Auth required, owner only. Idempotent: returns existing token if one exists.
+app.post("/api/decks/:id/share", requireAuth, async (req, res) => {
+  const { id: deckId } = req.params;
+  const userId = req.session.userId;
+
+  try {
+    // Verify deck exists and belongs to this user (404 on miss, not 403)
+    const deckResult = await pool.query(
+      "SELECT id FROM decks WHERE id = $1 AND user_id = $2",
+      [deckId, userId]
+    );
+    if (deckResult.rowCount === 0) {
+      return res.status(404).json({ error: "Deck not found" });
+    }
+
+    // Check for existing token (idempotent)
+    const existing = await pool.query(
+      "SELECT token FROM share_tokens WHERE deck_id = $1",
+      [deckId]
+    );
+    if (existing.rowCount > 0) {
+      return res.json({ token: existing.rows[0].token });
+    }
+
+    // Create new token
+    const token = `share-${crypto.randomUUID()}`;
+    await pool.query(
+      "INSERT INTO share_tokens (token, deck_id, created_by) VALUES ($1, $2, $3)",
+      [token, deckId, userId]
+    );
+    res.status(201).json({ token });
+  } catch (err) {
+    console.error("Error creating share token:", err);
+    res.status(500).json({ error: "Failed to create share link" });
+  }
+});
+
+// GET /api/shared/:token — fetch shared deck with cards, no auth required
+app.get("/api/shared/:token", async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const deckResult = await pool.query(
+      `SELECT d.id, d.title, d.category, d.creation_time
+       FROM share_tokens s
+       JOIN decks d ON d.id = s.deck_id
+       WHERE s.token = $1`,
+      [token]
+    );
+    if (deckResult.rowCount === 0) {
+      return res.status(404).json({ error: "Shared deck not found" });
+    }
+
+    const deck = deckResult.rows[0];
+    const cardsResult = await pool.query(
+      `SELECT id, question, answer, card_type, creation_time
+       FROM cards
+       WHERE deck_id = $1
+       ORDER BY creation_time ASC`,
+      [deck.id]
+    );
+
+    res.json({ deck, cards: cardsResult.rows });
+  } catch (err) {
+    console.error("Error fetching shared deck:", err);
+    res.status(500).json({ error: "Failed to load shared deck" });
+  }
+});
+
 //  CARD ROUTES
 app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   try {
