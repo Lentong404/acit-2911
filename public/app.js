@@ -149,8 +149,8 @@ function renderGrid(decks = null) {
 
   // Using innerHTML or use display: none :thinking:
 
-  grid.innerHTML = filtered.map(d => `
-    <div class="bg-white border border-stone-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3">
+    grid.innerHTML = filtered.map(d => `
+      <div class="bg-white border border-stone-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3">
       <div class="flex items-start justify-between">
         <h3 class="font-bold text-lg leading-tight break-words whitespace-normal overflow-hidden">
           ${esc(d.title)}
@@ -169,6 +169,10 @@ function renderGrid(decks = null) {
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
+          <button onclick="deleteDeck('${d.id}')"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
           <button onclick="shareDeck('${d.id}')"
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
             title="Share deck">
@@ -180,7 +184,7 @@ function renderGrid(decks = null) {
           </button>
         </div>
       </div>
-    </div>`).join('');
+      </div>`).join('');
 }
 
 //  Deck Modal 
