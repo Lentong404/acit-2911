@@ -169,9 +169,10 @@ function renderGrid(decks = null) {
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button onclick="deleteDeck('${d.id}')"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          <button onclick="shareDeck('${d.id}')"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+            title="Share deck">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
           <button onclick="openDeck('${d.id}')"
             class="px-4 py-1.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
@@ -236,6 +237,39 @@ async function deleteDeck(id) {
   await api('DELETE', `/decks/${id}`);
   showToast('Deck deleted');
   loadDecks();
+}
+
+//  Share
+async function shareDeck(deckId) {
+  try {
+    const { token } = await api('POST', `/decks/${deckId}/share`);
+    const url = `${window.location.origin}/shared.html?token=${encodeURIComponent(token)}`;
+    document.getElementById('share-url-input').value = url;
+    openModal('share-modal');
+    setTimeout(() => {
+      const input = document.getElementById('share-url-input');
+      input.focus();
+      input.select();
+    }, 120);
+  } catch (err) {
+    console.error('Share failed:', err);
+    showToast('Failed to create share link');
+  }
+}
+
+function closeShareModal() { closeModal('share-modal'); }
+
+async function copyShareLink() {
+  const input = document.getElementById('share-url-input');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    showToast('Link copied ✓');
+  } catch {
+    // Fallback for older browsers / non-HTTPS contexts
+    input.select();
+    document.execCommand('copy');
+    showToast('Link copied ✓');
+  }
 }
 
 //  Study 
@@ -496,7 +530,7 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ') { e.preventDefault(); flipCard(); }
 });
 
-['deck-modal', 'card-modal'].forEach(id => {
+['deck-modal', 'card-modal', 'share-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === document.getElementById(id)) closeModal(id);
   });

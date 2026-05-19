@@ -280,6 +280,25 @@
     </div>
   </div>
 
+  <!-- Share Deck -->
+  <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="share-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">Share Deck</h2>
+        <button onclick="closeShareModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
+      </div>
+      <p class="text-sm text-stone-500 mb-3">Anyone with this link can view this deck (read-only).</p>
+      <div class="flex gap-2">
+        <input id="share-url-input" type="text" readonly
+          class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:border-stone-800" />
+        <button onclick="copyShareLink()"
+          class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors shrink-0">
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Pop up (it's called toast apparently) -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-lg z-50 hidden whitespace-nowrap"></div>
 
