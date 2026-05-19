@@ -44,10 +44,14 @@ describe("API Endpoint Integration Suite", () => {
         .expect("Content-Type", /json/)
         .expect(201);
 
+      const correctChoice = res.body.choices.find(c => c.isCorrect === true);
+
+      console.log('DEBUG RESPONSE BODY:', JSON.stringify(res.body, null, 2));
       assert.match(res.body.id, /^card-/);
       assert.equal(res.body.cardType, "multiple_choice");
       assert.equal(res.body.choices.length, 2);
-      assert.equal(res.body.choices[0].choiceText, "Ottawa");
+      assert.ok(correctChoice, 'Should have found a correct choice');
+      assert.strictEqual(correctChoice.choiceText, 'Ottawa');
 
       const dbCard = await pool.query("SELECT * FROM cards WHERE id = $1", [res.body.id]);
       const dbChoices = await pool.query("SELECT * FROM card_choices WHERE card_id = $1", [res.body.id]);
