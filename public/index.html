@@ -9,14 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script>
     (function () {
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.body && document.body.setAttribute('data-theme', saved);
     })();
   </script>
   <link rel="stylesheet" href="styles.css">
@@ -99,13 +94,25 @@
             Logout
           </button>
         </div>
-        <button onclick="toggleDark()" id="dark-toggle"
-          class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
-          <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-          <span id="dark-label">Dark mode</span>
-        </button>
+        <!-- Theme Palette Picker -->
+        <div class="relative" id="theme-picker-wrap">
+          <button onclick="toggleThemePicker()"
+            class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors"
+            title="Change theme">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            </svg>
+            <span id="theme-label">Theme</span>
+          </button>
+          <div id="theme-dropdown"
+            class="hidden absolute right-0 mt-2 p-2 bg-white border border-stone-200 rounded-xl shadow-xl z-50 flex flex-col gap-1 min-w-[140px]">
+            <button onclick="setTheme('light')"   data-theme-btn="light"   class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#ffffff;border:1.5px solid #d4d4d4"></span>Light</button>
+            <button onclick="setTheme('dark')"    data-theme-btn="dark"    class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#1c1917"></span>Dark</button>
+            <button onclick="setTheme('ocean')"   data-theme-btn="ocean"   class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#2563eb"></span>Ocean</button>
+            <button onclick="setTheme('forest')"  data-theme-btn="forest"  class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#15803d"></span>Forest</button>
+          </div>
+        </div>
       </div>
     </div>
 
