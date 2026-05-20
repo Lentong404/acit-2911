@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Deck — Flashcards</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-white text-stone-900 min-h-screen">
+
+  <div id="shared-view" class="max-w-2xl mx-auto px-6 py-12">
+
+    <!-- Loading state -->
+    <div id="loading" class="text-center py-24 text-stone-400 text-sm">Loading deck…</div>
+
+    <!-- Error state -->
+    <div id="error" class="hidden text-center py-24">
+      <p class="text-stone-500 text-sm mb-4">This shared deck doesn't exist or has been deleted.</p>
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">
+        Go home
+      </a>
+    </div>
+
+    <!-- Deck content -->
+    <div id="deck-content" class="hidden">
+      <p class="text-xs font-medium text-stone-400 uppercase tracking-widest text-center mb-2">Shared Deck (read-only)</p>
+      <h1 id="study-title" class="text-4xl text-center tracking-tight mb-1" style="font-family:'Playfair Display',serif"></h1>
+      <p id="card-counter" class="text-center text-sm text-stone-400 mb-6"></p>
+
+      <div class="h-1 bg-stone-100 rounded-full mb-8 overflow-hidden">
+        <div id="progress-fill" class="h-full bg-stone-800 rounded-full transition-all duration-300" style="width:0%"></div>
+      </div>
+
+      <!-- Flashcard -->
+      <div class="relative mb-8 cursor-pointer" style="perspective:1200px" onclick="flipCard()">
+        <div id="flashcard-inner" class="relative w-full">
+          <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+            <p id="card-question" class="text-xl leading-relaxed text-stone-800"></p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
+          </div>
+          <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+            <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+            <p id="card-answer" class="text-xl leading-relaxed text-stone-100"></p>
+            <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
+          </div>
+          <div class="invisible px-12 py-10" style="min-height:280px"></div>
+        </div>
+      </div>
+
+      <!-- Prev / Next -->
+      <div class="flex justify-center items-center gap-3">
+        <button id="prev-btn" onclick="navigateCards('prev')"
+          class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Previous
+        </button>
+        <button id="next-btn" onclick="navigateCards('next')"
+          class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+          Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+</body>
+</html>
