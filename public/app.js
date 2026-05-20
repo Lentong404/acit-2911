@@ -8,6 +8,8 @@ let selectedType = 'basic'; // Default state is basic
 let quizMode = false;
 let quizAnswered = false;
 let mcqFlipped = false;
+let quizScore = 0;
+let quizTotalAnswer = 0;
 
 // prevents crash on loading decks
 function esc(str) {
@@ -295,6 +297,8 @@ async function openDeck(deckId) {
 
 async function openDeckQuiz(deckId) {
   quizMode = true;
+  quizScore = 0;
+  quizTotalAnswer = 0;
   document.getElementById('card-action-btns')?.classList.add('hidden');
   await openDeck(deckId);
 }
@@ -381,6 +385,23 @@ function renderQuizWidget(card) {
   });
 }
 
+function showQuizScorePopup() {
+  const percent = Math.round((quizScore / quizTotalAnswer) * 100);
+
+  document.getElementById('quiz-score-text').textContent =
+  `Final Score: ${quizScore}/${quizTotalAnswer} (${percent}%)`;
+
+  const popup = document.getElementById(`quiz-score-popup`);
+  popup.classList.remove(`hidden`)
+  popup.classList.add(`flex`)
+}
+
+function closeQuizScorePopup() {
+  const popup = document.getElementById(`quiz-score-popup`);
+  popup.classList.add(`hidden`)
+  popup.classList.remove(`flex`)
+}
+
 function answerQuiz(card, selectedIndex) {
   if (quizAnswered) return;
   quizAnswered = true;
@@ -396,6 +417,8 @@ function answerQuiz(card, selectedIndex) {
     }
   });
   const correct = card.choices[selectedIndex].isCorrect;
+  if (correct) quizScore++;
+  quizTotalAnswer++;
   const feedback = document.getElementById('quiz-feedback');
   feedback.classList.remove('hidden');
   if (correct) {
@@ -407,6 +430,11 @@ function answerQuiz(card, selectedIndex) {
     feedback.className = 'quiz-feedback quiz-feedback--wrong';
   }
   playAnswerSFX(correct);
+
+  const totalQuiz = cards.filter(card => card.cardType === 'multiple_choice').length;
+  if (quizTotalAnswer === totalQuiz) {
+    showQuizScorePopup();
+  }
 }
 
 function toggleQuizMode() {
