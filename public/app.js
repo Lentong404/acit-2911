@@ -5,6 +5,9 @@ let cards = [], isFlipped = false;
 let allDecks = [];
 let activeFilter = 'All';
 let selectedType = 'basic'; // Default state is basic
+let quizMode = false;
+let quizAnswered = false;
+let mcqFlipped = false;
 
 // prevents crash on loading decks
 function esc(str) {
@@ -95,7 +98,7 @@ function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function goHome() { showView('home-view'); loadDecks(); }
+function goHome() { quizMode = false; document.getElementById('card-action-btns')?.classList.remove('hidden'); showView('home-view'); loadDecks(); }
 
 //  Home
 async function loadDecks() {
@@ -149,15 +152,18 @@ function renderGrid(decks = null) {
 
   // Using innerHTML or use display: none :thinking:
 
-  grid.innerHTML = filtered.map(d => `
-    <div class="bg-white border border-stone-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3">
+    grid.innerHTML = filtered.map(d => `
+      <div class="bg-white border border-stone-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3">
       <div class="flex items-start justify-between">
         <h3 class="font-bold text-lg leading-tight break-words whitespace-normal overflow-hidden">
           ${esc(d.title)}
         </h3>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" class="shrink-0 mt-0.5">
-          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 4v16M16 4v16"/>
-        </svg>
+        <button onclick="openDeckQuiz('${d.id}')" title="Start quiz mode"
+          class="w-9 h-9 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors shrink-0 -mt-1 -mr-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+        </button>
       </div>
       ${categorySplit(d.category).length ? `<div class="flex flex-wrap gap-1"> ${categorySplit(d.category).map(category => 
         `<span class="inline-block text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"> ${esc(category)} </span> `).join('')} </div>` : '<span></span>' }
@@ -173,13 +179,18 @@ function renderGrid(decks = null) {
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
           </button>
+          <button onclick="shareDeck('${d.id}')"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+            title="Share deck">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
           <button onclick="openDeck('${d.id}')"
             class="px-4 py-1.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
             Study
           </button>
         </div>
       </div>
-    </div>`).join('');
+      </div>`).join('');
 }
 
 //  Deck Modal 
@@ -238,6 +249,39 @@ async function deleteDeck(id) {
   loadDecks();
 }
 
+//  Share
+async function shareDeck(deckId) {
+  try {
+    const { token } = await api('POST', `/decks/${deckId}/share`);
+    const url = `${window.location.origin}/shared.html?token=${encodeURIComponent(token)}`;
+    document.getElementById('share-url-input').value = url;
+    openModal('share-modal');
+    setTimeout(() => {
+      const input = document.getElementById('share-url-input');
+      input.focus();
+      input.select();
+    }, 120);
+  } catch (err) {
+    console.error('Share failed:', err);
+    showToast('Failed to create share link');
+  }
+}
+
+function closeShareModal() { closeModal('share-modal'); }
+
+async function copyShareLink() {
+  const input = document.getElementById('share-url-input');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    showToast('Link copied ✓');
+  } catch {
+    // Fallback for older browsers / non-HTTPS contexts
+    input.select();
+    document.execCommand('copy');
+    showToast('Link copied ✓');
+  }
+}
+
 //  Study 
 async function openDeck(deckId) {
   currentDeckId = deckId;
@@ -247,6 +291,12 @@ async function openDeck(deckId) {
   document.getElementById('study-title').textContent = deck.title;
   renderStudyView();
   showView('study-view');
+}
+
+async function openDeckQuiz(deckId) {
+  quizMode = true;
+  document.getElementById('card-action-btns')?.classList.add('hidden');
+  await openDeck(deckId);
 }
 
 function renderStudyView() {
@@ -260,15 +310,109 @@ function renderStudyView() {
   }
   if (currentCardIndex >= cards.length) currentCardIndex = cards.length - 1;
   if (currentCardIndex < 0) currentCardIndex = 0;
+
   const card = cards[currentCardIndex];
-  document.getElementById('card-question').textContent = card.question;
-  document.getElementById('card-answer').textContent = card.answer;
+  const isMcq = card.cardType === 'multiple_choice';
+
   document.getElementById('card-counter').textContent = `Card ${currentCardIndex + 1} of ${cards.length}`;
   document.getElementById('progress-fill').style.width = `${((currentCardIndex + 1) / cards.length) * 100}%`;
   document.getElementById('prev-btn').disabled = currentCardIndex === 0;
   document.getElementById('next-btn').disabled = currentCardIndex === cards.length - 1;
-  isFlipped = false;
-  document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
+
+  const flipWrapper = document.getElementById('flashcard-inner')?.closest('[style*="perspective"]');
+  const mcqView    = document.getElementById('mcq-view');
+  const quizWidget = document.getElementById('quiz-widget');
+
+  flipWrapper?.classList.add('hidden');
+  mcqView?.classList.add('hidden');
+  quizWidget?.classList.add('hidden');
+
+  if (isMcq && quizMode && quizWidget) {
+    quizWidget.classList.remove('hidden');
+    quizAnswered = false;
+    renderQuizWidget(card);
+  } else if (isMcq && mcqView) {
+    mcqView.classList.remove('hidden');
+    mcqFlipped = false;
+    mcqView.querySelector('.mcq-card')?.classList.remove('mcq-card--flipped');
+    renderMcqView(card);
+  } else {
+    flipWrapper?.classList.remove('hidden');
+    document.getElementById('card-question').textContent = card.question;
+    document.getElementById('card-answer').textContent = card.answer;
+    isFlipped = false;
+    document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
+  }
+}
+
+function renderMcqView(card) {
+  document.getElementById('mcq-question').textContent = card.question;
+  const labels = 'ABCDE';
+  const display = document.getElementById('mcq-choices-display');
+  display.innerHTML = '';
+  card.choices.forEach((ch, i) => {
+    const item = document.createElement('div');
+    item.className = 'mcq-choice-item' + (ch.isCorrect ? ' mcq-choice-item--correct' : '');
+    item.innerHTML = `<span class="mcq-choice-item__letter">${labels[i] ?? i + 1}</span><span class="mcq-choice-item__text">${esc(ch.choiceText)}</span>`;
+    display.appendChild(item);
+  });
+}
+
+function flipMcqCard() {
+  mcqFlipped = !mcqFlipped;
+  document.getElementById('mcq-view').querySelector('.mcq-card').classList.toggle('mcq-card--flipped', mcqFlipped);
+  if (mcqFlipped) playRandomSFX();
+}
+
+function renderQuizWidget(card) {
+  document.getElementById('quiz-question').textContent = card.question;
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.className = 'quiz-feedback hidden';
+  feedback.textContent = '';
+  const choicesEl = document.getElementById('quiz-choices');
+  choicesEl.innerHTML = '';
+  const labels = 'ABCDE';
+  card.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-choice-btn';
+    btn.innerHTML = `<span class="quiz-choice-btn__letter">${labels[i] ?? i + 1}</span>${esc(ch.choiceText)}`;
+    btn.onclick = () => answerQuiz(card, i);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function answerQuiz(card, selectedIndex) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const buttons = document.querySelectorAll('.quiz-choice-btn');
+  buttons.forEach((btn, i) => {
+    btn.onclick = null;
+    if (card.choices[i].isCorrect) {
+      btn.classList.add('quiz-choice-btn--correct');
+    } else if (i === selectedIndex) {
+      btn.classList.add('quiz-choice-btn--wrong');
+    } else {
+      btn.classList.add('quiz-choice-btn--dimmed');
+    }
+  });
+  const correct = card.choices[selectedIndex].isCorrect;
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.classList.remove('hidden');
+  if (correct) {
+    feedback.textContent = '✓ Correct!';
+    feedback.className = 'quiz-feedback quiz-feedback--correct';
+  } else {
+    const correctChoice = card.choices.find(c => c.isCorrect);
+    feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
+    feedback.className = 'quiz-feedback quiz-feedback--wrong';
+  }
+  playRandomSFX();
+}
+
+function toggleQuizMode() {
+  quizMode = !quizMode;
+  document.getElementById('card-action-btns')?.classList.toggle('hidden', quizMode);
+  renderStudyView();
 }
 
 // Sound effects library file inventory mapping
@@ -306,20 +450,43 @@ const flipPreviewCard = flipCard;
 // function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
 function navigateCards(direction) {
-  const cardElement = document.getElementById('flashcard-inner'); 
+  const cardElement = document.getElementById('flashcard-inner');
+  const mcqCard = document.querySelector('#mcq-view .mcq-card');
+
+  // Snap flip card to question-side instantly (no transition)
+  cardElement.style.transition = 'none';
   cardElement.style.transform = 'rotateY(0deg)';
   isFlipped = false;
+
+  // Snap MCQ browse card to question-side instantly
+  if (mcqCard) {
+    mcqCard.querySelectorAll('.mcq-card__front, .mcq-card__back').forEach(face => {
+      face.style.transition = 'none';
+    });
+    mcqCard.classList.remove('mcq-card--flipped');
+    mcqFlipped = false;
+  }
+
+  if (direction === 'next') {
+    if (currentCardIndex < cards.length - 1) currentCardIndex++;
+  } else {
+    if (currentCardIndex > 0) currentCardIndex--;
+  }
+
+  renderStudyView();
   playRandomSFX();
-  // delay allows animation to start/finish before the text content actually changes
-  setTimeout(() => {
-    if (direction === 'next') {
-      if (currentCardIndex < cards.length - 1) currentCardIndex++;
-    } else {
-      if (currentCardIndex > 0) currentCardIndex--;
-    }
-    renderStudyView(); 
-    
-  }, 150);
+
+  // Re-enable transitions after the frame has painted
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cardElement.style.transition = '';
+      if (mcqCard) {
+        mcqCard.querySelectorAll('.mcq-card__front, .mcq-card__back').forEach(face => {
+          face.style.transition = '';
+        });
+      }
+    });
+  });
 }
 
 //  Card Modal 
@@ -400,7 +567,7 @@ async function saveCard() {
       const input = row.querySelector('.choice-text');
       // Locked T/F rows store lowercase in data-save-value; regular rows use the input value
       const text = input.dataset.saveValue ?? input.value;
-      const correct = row.querySelector('input[type="radio"]').checked;
+      const correct = row.querySelector('.choice-checker')?.getAttribute('data-correct') === 'true';
       if (text.trim()) choices.push({ choiceText: text, isCorrect: correct });
     });
     // Derive answer from the correct choice (answer column is NOT NULL in DB)
@@ -496,7 +663,7 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ') { e.preventDefault(); flipCard(); }
 });
 
-['deck-modal', 'card-modal'].forEach(id => {
+['deck-modal', 'card-modal', 'share-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === document.getElementById(id)) closeModal(id);
   });
@@ -728,7 +895,7 @@ function snapshotMcqChoices() {
   const rows = document.querySelectorAll('#choices-list > div');
   cachedMcqChoices = Array.from(rows).map(row => ({
     text: row.querySelector('.choice-text').value,
-    isCorrect: row.querySelector('input[type="radio"]').checked
+    isCorrect: row.querySelector('.choice-checker')?.getAttribute('data-correct') === 'true'
   }));
 }
 
@@ -741,6 +908,12 @@ document.getElementById('card-type-group').addEventListener('click', (e) => {
 
   // Snapshot MCQ choices before switching away from MCQ
   if (selectedType === 'multiple_choice') snapshotMcqChoices();
+
+  // When switching from basic to MCQ, seed the answer as the first choice
+  if (selectedType === 'basic' && newType === 'multiple_choice' && !isActive) {
+    const answer = document.getElementById('card-answer-input').value.trim();
+    if (answer) cachedMcqChoices = [{ text: answer, isCorrect: true }];
+  }
 
   document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
 
@@ -792,49 +965,371 @@ function addChoiceRow(text = '', isCorrect = false, opts = {}) {
   const { label = null, locked = false } = opts;
   const displayValue = label ?? text;
   const list = document.getElementById('choices-list');
+
   const row = document.createElement('div');
-  row.className = "flex items-center gap-2";
-  row.innerHTML = `
-    <input type="radio" name="mcq-correct" ${isCorrect ? 'checked' : ''} class="w-4 h-4 text-stone-900">
-    <input type="text" class="choice-text flex-1 p-2 border border-stone-200 rounded-lg text-sm${locked ? ' bg-stone-100 text-stone-500 cursor-default' : ''}"
-      placeholder="Choice text..." value="${locked ? displayValue : text}"${locked ? ' readonly' : ''}>
-    ${locked ? '<span class="w-5"></span>' : '<button type="button" class="text-stone-400 hover:text-red-500" onclick="this.parentElement.remove()">✕</button>'}
-  `;
-  // For locked T/F rows, store the lowercase save value in a data attribute
-  if (locked) row.querySelector('.choice-text').dataset.saveValue = text;
+  row.className = 'choice-row';
+
+  // Checker — div with role=button so Tailwind base reset doesn't override background
+  const checker = document.createElement('div');
+  checker.className = 'choice-checker';
+  checker.setAttribute('role', 'button');
+  checker.setAttribute('tabindex', '0');
+  checker.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  setCheckerState(checker, isCorrect);
+
+  const selectChecker = () => {
+    list.querySelectorAll('.choice-checker').forEach(btn => setCheckerState(btn, false));
+    setCheckerState(checker, true);
+  };
+  checker.addEventListener('click', selectChecker);
+  checker.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectChecker(); }
+  });
+
+  // Text input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'choice-text' + (locked ? ' choice-text--locked' : '');
+  input.placeholder = 'Choice text...';
+  input.value = locked ? displayValue : text;
+  if (locked) {
+    input.readOnly = true;
+    input.dataset.saveValue = text;
+  }
+
+  row.appendChild(checker);
+  row.appendChild(input);
+
+  if (!locked) {
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'choice-delete';
+    del.textContent = '✕';
+    del.addEventListener('click', () => row.remove());
+    row.appendChild(del);
+  } else {
+    const spacer = document.createElement('span');
+    spacer.className = 'choice-delete-placeholder';
+    row.appendChild(spacer);
+  }
+
   list.appendChild(row);
 }
 
-async function handleSaveCard() {
-  const question = document.getElementById('card-question').value;
-  const answer = document.getElementById('card-answer').value;
-  
-  let finalType = selectedType;
-  let choices = [];
+function setCheckerState(checker, isCorrect) {
+  checker.setAttribute('data-correct', isCorrect ? 'true' : 'false');
+  checker.setAttribute('aria-pressed', isCorrect ? 'true' : 'false');
+  checker.classList.toggle('choice-checker--checked', isCorrect);
+}
 
-  if (selectedType === 'true_false') {
-    // Convert T/F to MCQ for backend compatibility
-    finalType = 'multiple_choice';
-    const isTrue = answer.toLowerCase().trim() === 'true';
-    choices = [
-      { choiceText: 'True', isCorrect: isTrue },
-      { choiceText: 'False', isCorrect: !isTrue }
-    ];
-  } else if (selectedType === 'multiple_choice') {
-    const rows = document.querySelectorAll('#choices-list div');
-    rows.forEach(row => {
-      choices.push({
-        choiceText: row.querySelector('.choice-text').value,
-        isCorrect: row.querySelector('input[type="radio"]').checked
-      });
-    });
+
+// ── AI Card Generator Panel ───────────────────────────────────────
+
+// State — kept separate from study view state
+let aiCards = [];
+let aiCardIndex = 0;
+let aiFlipped = false;
+let aiStreaming = false;
+
+function openAiPanel() {
+  aiPopulateDeckSelect();
+  // Reset to full size on open
+  document.getElementById('ai-prompt-input').rows = 3;
+  document.getElementById('ai-stream-wrap').classList.add('hidden');
+  const modal = document.getElementById('ai-modal');
+  modal.style.display = '';
+  openModal('ai-modal');
+  if (document.getElementById('ai-model-select').options[0]?.value === '') {
+    loadAiModels();
   }
+}
 
-  const payload = {
-    question,
-    answer,
-    cardType: finalType, // Matches card_type alias in server.js
-    choices
-  };
-  saveCard();
+function closeAiPanel() {
+  closeModal('ai-modal');
+  // Belt-and-suspenders: also hide so it can never block clicks even if pointer-events glitches
+  setTimeout(() => {
+    const modal = document.getElementById('ai-modal');
+    if (modal.classList.contains('opacity-0')) modal.style.display = 'none';
+  }, 210); // after transition completes
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ai-modal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('ai-modal')) closeAiPanel();
+  });
+});
+
+// ── Model loading ─────────────────────────────────────────────────
+
+async function loadAiModels() {
+  const sel = document.getElementById('ai-model-select');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const data = await fetch('/ai-chat/models').then(r => r.json());
+    sel.innerHTML = '';
+
+    // Gemini first
+    if (data.gemini) {
+      const g = document.createElement('optgroup');
+      g.label = 'Gemini';
+      data.gemini.forEach(m => {
+        const o = document.createElement('option');
+        o.value = 'gemini:' + m;
+        o.textContent = m;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    }
+
+    // Groq second
+    if (data.groq) {
+      const g = document.createElement('optgroup');
+      g.label = 'Groq';
+      data.groq.forEach(m => {
+        const o = document.createElement('option');
+        o.value = 'groq:' + m;
+        o.textContent = m;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    }
+
+    // Ollama local models last
+    if (data.ollama?.length) {
+      const g = document.createElement('optgroup');
+      g.label = 'Local (Ollama)';
+      data.ollama.forEach(m => {
+        const o = document.createElement('option');
+        o.value = 'ollama:' + m;
+        o.textContent = m;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    }
+
+    // Restore saved preference
+    const saved = localStorage.getItem('ai-model');
+    if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+    else if (sel.options.length) sel.value = sel.options[0].value;
+
+  } catch (e) {
+    sel.innerHTML = '<option value="gemini:gemini-3.1-flash-lite">gemini-3.1-flash-lite (default)</option>';
+  }
+}
+
+document.getElementById('ai-model-select')?.addEventListener('change', () => {
+  const v = document.getElementById('ai-model-select').value;
+  if (v) localStorage.setItem('ai-model', v);
+});
+
+// ── Prompt + streaming ────────────────────────────────────────────
+
+async function sendAiPrompt() {
+  const prompt = document.getElementById('ai-prompt-input').value.trim();
+  if (!prompt || aiStreaming) return;
+
+  const modelVal  = document.getElementById('ai-model-select').value;
+  const cardCount = Math.min(20, Math.max(1, parseInt(document.getElementById('ai-card-count').value, 10) || 5));
+  const cardType  = document.getElementById('ai-card-type').value;
+
+  if (!modelVal) { showToast('Select a model first'); return; }
+
+  const [provider, model] = modelVal.split(':');
+
+  aiStreaming = true;
+  aiCards = [];
+  aiFlipped = false;
+
+  // UI: show stream, shrink prompt, hide carousel/save
+  document.getElementById('ai-prompt-input').rows = 1;
+  document.getElementById('ai-stream-wrap').classList.remove('hidden');
+  document.getElementById('ai-stream-raw').textContent = '';
+  document.getElementById('ai-carousel-phase').classList.add('hidden');
+  document.getElementById('ai-save-phase').classList.add('hidden');
+  document.getElementById('ai-generate-btn').disabled = true;
+  document.getElementById('ai-btn-idle').classList.add('hidden');
+  document.getElementById('ai-btn-busy').classList.remove('hidden');
+
+  // Timer
+  const t0 = performance.now();
+  const timer = setInterval(() => {
+    document.getElementById('ai-busy-label').textContent =
+      ((performance.now() - t0) / 1000).toFixed(1) + 's';
+  }, 100);
+
+  let raw = '';
+  try {
+    const res = await fetch('/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, provider, model, cardCount, cardType })
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const j = JSON.parse(line);
+          if (j.response) {
+            raw += j.response;
+            document.getElementById('ai-stream-raw').textContent = raw;
+          }
+        } catch { /* skip */ }
+      }
+    }
+
+    // Flush any remaining buffered content after stream ends
+    if (buf.trim()) {
+      try {
+        const j = JSON.parse(buf.trim());
+        if (j.response) {
+          raw += j.response;
+          document.getElementById('ai-stream-raw').textContent = raw;
+        }
+      } catch { /* skip */ }
+    }
+
+    // Parse cards from raw output
+    const parseRes = await fetch('/ai-chat/parse-cards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw })
+    });
+    const parseBody = await parseRes.json();
+    if (!parseBody.cards?.length) {
+      const detail = parseBody.error || 'No cards found in response';
+      const preview = parseBody.rawPreview ? `\n\nModel output preview:\n${parseBody.rawPreview}` : '';
+      console.error('[AI] Parse failed:', detail, preview);
+      throw new Error(detail);
+    }
+
+    aiCards = parseBody.cards;
+    aiCardIndex = 0;
+
+    // Hide stream, show carousel + save
+    document.getElementById('ai-stream-wrap').classList.add('hidden');
+    document.getElementById('ai-carousel-phase').classList.remove('hidden');
+    document.getElementById('ai-save-phase').classList.remove('hidden');
+    aiRenderCarousel();
+
+  } catch (e) {
+    showToast(e.message || 'Generation failed');
+    document.getElementById('ai-prompt-input').rows = 3;
+    document.getElementById('ai-stream-wrap').classList.add('hidden');
+  } finally {
+    clearInterval(timer);
+    aiStreaming = false;
+    document.getElementById('ai-generate-btn').disabled = false;
+    document.getElementById('ai-btn-idle').classList.remove('hidden');
+    document.getElementById('ai-btn-busy').classList.add('hidden');
+  }
+}
+
+// ── Carousel — mirrors renderStudyView but scoped to AI panel ─────
+
+function aiRenderCarousel() {
+  if (!aiCards.length) return;
+  const card = aiCards[aiCardIndex];
+
+  document.getElementById('ai-card-question').textContent = card.question;
+  document.getElementById('ai-card-answer').textContent = card.answer;
+  document.getElementById('ai-card-counter').textContent =
+    `Card ${aiCardIndex + 1} of ${aiCards.length}`;
+  document.getElementById('ai-prev-btn').disabled = aiCardIndex === 0;
+  document.getElementById('ai-next-btn').disabled = aiCardIndex === aiCards.length - 1;
+
+  // Snap to question side
+  const inner = document.getElementById('ai-flashcard-inner');
+  inner.style.transition = 'none';
+  inner.style.transform = 'rotateY(0deg)';
+  aiFlipped = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    inner.style.transition = '';
+  }));
+}
+
+function aiFlipCard() {
+  aiFlipped = !aiFlipped;
+  document.getElementById('ai-flashcard-inner').style.transform =
+    aiFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  playRandomSFX();
+}
+
+function aiNavigate(direction) {
+  if (direction === 'next' && aiCardIndex < aiCards.length - 1) aiCardIndex++;
+  if (direction === 'prev' && aiCardIndex > 0) aiCardIndex--;
+  aiRenderCarousel();
+  playRandomSFX();
+}
+
+// ── Deck selector ─────────────────────────────────────────────────
+
+function aiPopulateDeckSelect() {
+  const sel = document.getElementById('ai-deck-select');
+  sel.innerHTML = '<option value="__new__">+ Create new deck…</option>';
+  allDecks.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id;
+    o.textContent = `${d.title} (${d.cardCount ?? 0} cards)`;
+    sel.appendChild(o);
+  });
+  aiSyncNewDeckRow();
+}
+
+document.getElementById('ai-deck-select')?.addEventListener('change', aiSyncNewDeckRow);
+
+function aiSyncNewDeckRow() {
+  const isNew = document.getElementById('ai-deck-select').value === '__new__';
+  document.getElementById('ai-new-deck-row').classList.toggle('hidden', !isNew);
+}
+
+// ── Save ──────────────────────────────────────────────────────────
+
+async function saveAiCards() {
+  if (!aiCards.length) return;
+  const btn = document.getElementById('ai-save-btn');
+  btn.disabled = true;
+
+  try {
+    let deckId = document.getElementById('ai-deck-select').value;
+
+    // Create new deck if needed
+    if (deckId === '__new__') {
+      const title = document.getElementById('ai-new-deck-title').value.trim();
+      if (!title) { showToast('Enter a deck name'); btn.disabled = false; return; }
+      const category = document.getElementById('ai-new-deck-category').value.trim();
+      const newDeck = await api('POST', '/decks', { title, category });
+      deckId = newDeck.id;
+      await loadDecks(); // Refresh home grid
+    }
+
+    // Save each card using the existing route
+    for (const card of aiCards) {
+      await api('POST', `/decks/${deckId}/cards`, {
+        question: card.question,
+        answer: card.answer,
+        card_type: card.card_type || 'basic',
+        choices: card.choices || []
+      });
+    }
+
+    showToast(`${aiCards.length} card${aiCards.length !== 1 ? 's' : ''} saved ✓`);
+    document.getElementById('ai-save-phase').classList.add('hidden');
+    await loadDecks();
+
+  } catch (e) {
+    showToast(e.message || 'Save failed');
+  } finally {
+    btn.disabled = false;
+  }
 }
