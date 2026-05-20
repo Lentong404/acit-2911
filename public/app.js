@@ -406,7 +406,7 @@ function answerQuiz(card, selectedIndex) {
     feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
     feedback.className = 'quiz-feedback quiz-feedback--wrong';
   }
-  playRandomSFX();
+  playAnswerSFX(correct);
 }
 
 function toggleQuizMode() {
@@ -433,6 +433,16 @@ function playRandomSFX() {
       const effectAudio = new Audio(sfxPath);
       
       // Tied to existing sfxVolume slider tracker variable
+      if (typeof sfxVolume === 'number') {
+        effectAudio.volume = sfxVolume;
+      }
+      effectAudio.play().catch(e => console.log("SFX blocked or missing:", e));
+    }
+
+function playAnswerSFX(isCorrect) {
+      const soundFile = isCorrect ? "right.mp3" : "wrong.mp3";
+      const effectAudio = new Audio(`/audio/${soundFile}`);
+      
       if (typeof sfxVolume === 'number') {
         effectAudio.volume = sfxVolume;
       }
