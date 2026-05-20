@@ -17,7 +17,7 @@ function categorySplit(category) {
   if (!category) return [];
   return category
   .split(',')
-  .map(c => c.trim())
+  .map(c => c.trim().toLowerCase())
   .filter(Boolean);
 }
 
@@ -50,7 +50,7 @@ function addCatToDeck() {
   const input = document.getElementById('deck-category-input');
   if (!input) return;
 
-  const category = input.value.trim();
+  const category = input.value.trim().toLowerCase();
 
   if (!category) return;
 
@@ -211,7 +211,7 @@ function closeDeckModal() { closeModal('deck-modal'); }
 
 async function saveDeck() {
   const title = document.getElementById('deck-title-input').value.trim();
-  const categoryInput = document.getElementById('deck-category-input').value.trim();
+  const categoryInput = document.getElementById('deck-category-input').value.trim().toLowerCase();
 
   if (categoryInput && !selectedDeckCategories.includes(categoryInput)) {
     selectedDeckCategories.push(categoryInput);

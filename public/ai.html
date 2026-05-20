@@ -416,8 +416,8 @@
 
     function newDeckCategoryValueForApi() {
       if (!newDeckCategory) return '';
-      if (newDeckCategory.value === '__custom__') return newDeckCategoryCustom.value.trim();
-      return (newDeckCategory.value || '').trim();
+      if (newDeckCategory.value === '__custom__') return newDeckCategoryCustom.value.trim().toLowerCase();
+      return (newDeckCategory.value || '').trim().toLowerCase();
     }
 
     async function loadDecks(preferId) {

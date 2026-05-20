@@ -220,7 +220,7 @@ app.post("/api/decks", requireAuth, async (req, res) => {
     const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
     const cleanTitle = DOMPurify.sanitize(title.trim(), sanitizeOpts);
     const cleanCategory = DOMPurify.sanitize(
-      (category || "").trim(),
+      (category || "").trim().toLowerCase(),
       sanitizeOpts,
     );
 
@@ -257,7 +257,7 @@ app.put("/api/decks/:deckId", requireAuth, async (req, res) => {
     const cleanTitle = DOMPurify.sanitize(title.trim(), {
       FORBID_TAGS: ["style", "script", "iframe"],
     });
-    const cleanCategory = DOMPurify.sanitize((category || "").trim(), {
+    const cleanCategory = DOMPurify.sanitize((category || "").trim().toLowerCase(), {
       FORBID_TAGS: ["style", "script", "iframe"],
     });
 
