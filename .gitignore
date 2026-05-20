@@ -3,3 +3,5 @@ node_modules/
 # Curl testing artifacts
 *-cookies.txt
 cookies.txt
+.DS_Store
+.env.example

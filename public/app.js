@@ -635,16 +635,66 @@ document.getElementById('deck-title-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveDeck();
 });
 
-//  Dark mode 
-function toggleDark() {
-  const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  document.getElementById('dark-label').textContent = isDark ? 'Light mode' : 'Dark mode';
-  document.getElementById('dark-icon').innerHTML = isDark
-    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
-    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+//  Theme Palettes 
+const THEMES = {
+  light:  { label: 'Light'  },
+  dark:   { label: 'Dark'   },
+  ocean:  { label: 'Ocean'  },
+  forest: { label: 'Forest' },
+};
+
+function setTheme(name) {
+  if (!THEMES[name]) name = 'light';
+  // Remove all theme attrs/classes from body and html
+  document.body.removeAttribute('data-theme');
+  document.documentElement.removeAttribute('data-theme');
+  ['light','dark','ocean','forest'].forEach(t => {
+    document.body.classList.remove('theme-' + t);
+    document.documentElement.classList.remove('theme-' + t);
+  });
+  // Also remove legacy dark class
+  document.body.classList.remove('dark');
+  document.documentElement.classList.remove('dark');
+
+  document.body.setAttribute('data-theme', name);
+  document.documentElement.setAttribute('data-theme', name);
+  document.body.classList.add('theme-' + name);
+  if (name === 'dark') document.body.classList.add('dark'); // keep legacy dark compat
+
+  localStorage.setItem('theme', name);
+
+  // Update label
+  const label = document.getElementById('theme-label');
+  if (label) label.textContent = THEMES[name].label;
+
+  // Highlight active swatch
+  document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+    const isActive = btn.dataset.themeBtn === name;
+    btn.classList.toggle('bg-stone-100', isActive);
+    btn.classList.toggle('font-semibold', isActive);
+  });
+
+  // Close dropdown
+  const dd = document.getElementById('theme-dropdown');
+  if (dd) dd.classList.add('hidden');
 }
-if (localStorage.getItem('theme') === 'dark') toggleDark();
+
+function toggleThemePicker() {
+  const dd = document.getElementById('theme-dropdown');
+  if (dd) dd.classList.toggle('hidden');
+}
+
+// Close picker when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('theme-picker-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById('theme-dropdown');
+    if (dd) dd.classList.add('hidden');
+  }
+});
+
+// Apply saved theme on load
+setTheme(localStorage.getItem('theme') || 'light');
 
 //  Utility 
 function esc(s) {
