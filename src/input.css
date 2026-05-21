@@ -15,7 +15,8 @@ button:disabled { opacity: 0.35; pointer-events: none; }
 button { cursor: pointer; user-select: none; }
 
 /*  Card Flip  */
-#flashcard-inner {
+#flashcard-inner,
+#shared-flashcard-inner {
   transform-style: preserve-3d;
   transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
   min-height: 280px;
@@ -244,6 +245,9 @@ button { cursor: pointer; user-select: none; }
   border-radius: 1rem;
   padding: 2rem 2.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  min-height: 372px;
+  display: flex;
+  flex-direction: column;
 }
 
 .quiz-card__question {
@@ -258,6 +262,7 @@ button { cursor: pointer; user-select: none; }
   display: flex;
   flex-direction: column;
   gap: .5rem;
+  margin-top: auto;
 }
 
 .quiz-choice-btn {
@@ -332,10 +337,31 @@ button { cursor: pointer; user-select: none; }
   font-size: .875rem;
   font-weight: 600;
   text-align: center;
+  min-height: 1.25rem;
+}
+
+.quiz-feedback.hidden {
+  visibility: hidden;
+  display: block !important;
 }
 
 .quiz-feedback--correct { color: #16a34a; }
 .quiz-feedback--wrong   { color: #dc2626; }
+
+/* ── Shared flip card text — uses semantic classes to avoid theme override conflicts */
+#shared-flashcard-inner .card-face:first-child p { color: #1c1917; }
+#shared-flashcard-inner .card-back p             { color: #e7e5e4; }
+
+body.theme-dark #shared-flashcard-inner .card-face:first-child p,
+body.dark #shared-flashcard-inner .card-face:first-child p { color: #e7e5e4; }
+body.theme-dark #shared-flashcard-inner .card-back p,
+body.dark #shared-flashcard-inner .card-back p             { color: #e7e5e4; }
+
+body.theme-ocean #shared-flashcard-inner .card-face:first-child p { color: #1e3a5f; }
+body.theme-ocean #shared-flashcard-inner .card-back p             { color: #fff; }
+
+body.theme-forest #shared-flashcard-inner .card-face:first-child p { color: #14532d; }
+body.theme-forest #shared-flashcard-inner .card-back p             { color: #fff; }
 
 /* ── AI Panel ────────────────────────────────────────────────── */
 .ai-spinner {
@@ -409,11 +435,15 @@ body.dark .hover\:bg-stone-700:hover { background-color: #3a3836 !important; }
 
 /* Flip card */
 body.theme-dark #flashcard-inner .card-face:first-child,
-body.dark #flashcard-inner .card-face:first-child { background-color: #292524 !important; border-color: #44403c !important; }
+body.theme-dark #shared-flashcard-inner .card-face:first-child,
+body.dark #flashcard-inner .card-face:first-child,
+body.dark #shared-flashcard-inner .card-face:first-child { background-color: #292524 !important; border-color: #44403c !important; }
 body.theme-dark #flashcard-inner .card-back,
 body.theme-dark #ai-flashcard-inner .card-back,
+body.theme-dark #shared-flashcard-inner .card-back,
 body.dark #flashcard-inner .card-back,
-body.dark #ai-flashcard-inner .card-back { background-color: #292524 !important; }
+body.dark #ai-flashcard-inner .card-back,
+body.dark #shared-flashcard-inner .card-back { background-color: #1c1917 !important; }
 
 /* Choice rows */
 body.theme-dark .choice-row,
@@ -514,9 +544,11 @@ body.theme-ocean .hover\:bg-stone-700:hover { background-color: #1e40af !importa
 body.theme-ocean #progress-fill    { background-color: #1d4ed8 !important; }
 
 /* Flip card */
-body.theme-ocean #flashcard-inner .card-face:first-child { background-color: #fff !important; border-color: #bfdbfe !important; }
+body.theme-ocean #flashcard-inner .card-face:first-child,
+body.theme-ocean #shared-flashcard-inner .card-face:first-child { background-color: #fff !important; border-color: #bfdbfe !important; }
 body.theme-ocean #flashcard-inner .card-back,
-body.theme-ocean #ai-flashcard-inner .card-back { background-color: #1d4ed8 !important; }
+body.theme-ocean #ai-flashcard-inner .card-back,
+body.theme-ocean #shared-flashcard-inner .card-back { background-color: #1d4ed8 !important; }
 
 /* Choice rows */
 body.theme-ocean .choice-row       { border-color: #bfdbfe; }
@@ -580,9 +612,11 @@ body.theme-forest .hover\:bg-stone-700:hover { background-color: #166534 !import
 body.theme-forest #progress-fill   { background-color: #15803d !important; }
 
 /* Flip card */
-body.theme-forest #flashcard-inner .card-face:first-child { background-color: #fff !important; border-color: #bbf7d0 !important; }
+body.theme-forest #flashcard-inner .card-face:first-child,
+body.theme-forest #shared-flashcard-inner .card-face:first-child { background-color: #fff !important; border-color: #bbf7d0 !important; }
 body.theme-forest #flashcard-inner .card-back,
-body.theme-forest #ai-flashcard-inner .card-back { background-color: #15803d !important; }
+body.theme-forest #ai-flashcard-inner .card-back,
+body.theme-forest #shared-flashcard-inner .card-back { background-color: #15803d !important; }
 
 /* Choice rows */
 body.theme-forest .choice-row      { border-color: #bbf7d0; }

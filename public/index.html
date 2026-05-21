@@ -12,6 +12,13 @@
       const saved = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', saved);
       document.body && document.body.setAttribute('data-theme', saved);
+      if (new URLSearchParams(window.location.search).has('token')) {
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          const lv = document.getElementById('shared-loading-view');
+          if (lv) lv.classList.add('active');
+        });
+      }
     })();
   </script>
   <link rel="stylesheet" href="styles.css">
@@ -320,7 +327,7 @@
         <h2 class="text-2xl font-bold">Share Deck</h2>
         <button onclick="closeShareModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
       </div>
-      <p class="text-sm text-stone-500 mb-3">Anyone with this link can view this deck (read-only).</p>
+      <p class="text-sm text-stone-500 mb-3">Anyone with this link can view this deck or make a copy.</p>
       <div class="flex gap-2">
         <input id="share-url-input" type="text" readonly
           class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:border-stone-800" />
@@ -465,6 +472,95 @@
     </div>
   </div>
 
+  <!-- SHARED DECK LOADING STATE -->
+  <div id="shared-loading-view" class="view max-w-2xl mx-auto px-6 py-24 text-center">
+    <p class="text-stone-400 text-sm">Loading deck…</p>
+  </div>
+
+  <!-- SHARED DECK LANDING VIEW -->
+  <div id="shared-landing-view" class="view relative max-w-2xl mx-auto px-6 py-16 text-center">
+    <button onclick="sharedGoHome()" class="absolute top-6 left-6 flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 transition-colors font-medium">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Home
+    </button>
+    <p class="text-xs font-semibold tracking-widest uppercase text-stone-400 mb-8">Flashcards</p>
+    <h1 id="shared-deck-title" class="text-5xl tracking-tight mb-3" style="font-family:'Playfair Display',serif"></h1>
+    <p id="shared-deck-creator" class="text-sm text-stone-400 mb-6"></p>
+    <div id="shared-deck-stats" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+    <div id="shared-deck-categories" class="flex flex-wrap justify-center gap-2 mb-10"></div>
+    <div class="flex justify-center gap-4">
+      <button id="shared-save-btn" onclick="sharedSaveCopy()"
+        class="flex items-center gap-2 px-6 py-3 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm font-semibold hover:border-stone-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:border-stone-200">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save a copy
+      </button>
+      <button onclick="sharedStartQuiz()"
+        class="flex items-center gap-2 px-6 py-3 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-700 transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Start Quiz
+      </button>
+    </div>
+  </div>
+
+  <!-- SHARED DECK QUIZ VIEW -->
+  <div id="shared-quiz-view" class="view max-w-2xl mx-auto px-6 py-12">
+    <div class="mb-6">
+      <button onclick="showView('shared-landing-view')"
+        class="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 transition-colors font-medium">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+    </div>
+    <h1 id="shared-quiz-title" class="text-4xl text-center tracking-tight mb-1" style="font-family:'Playfair Display',serif"></h1>
+    <p id="shared-quiz-counter" class="text-center text-sm text-stone-400 mb-6"></p>
+    <div class="h-1 bg-stone-100 rounded-full mb-8 overflow-hidden">
+      <div id="shared-progress-fill" class="h-full bg-stone-800 rounded-full transition-all duration-300" style="width:0%"></div>
+    </div>
+    <!-- Basic card flip -->
+    <div id="shared-flip-wrapper" class="hidden relative mb-6 cursor-pointer" style="perspective:1200px" onclick="sharedFlipCard()">
+      <div id="shared-flashcard-inner" class="relative w-full">
+        <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+          <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+          <p id="shared-card-question" class="text-xl leading-relaxed"></p>
+          <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
+        </div>
+        <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+          <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+          <p id="shared-card-answer" class="text-xl leading-relaxed"></p>
+          <div class="absolute bottom-5 right-5 flex gap-2">
+            <button onclick="sharedSelfAssess(false); event.stopPropagation();"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/40 transition-colors">
+              ✗ Missed it
+            </button>
+            <button onclick="sharedSelfAssess(true); event.stopPropagation();"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 text-xs font-semibold hover:bg-green-500/40 transition-colors">
+              ✓ Got it
+            </button>
+          </div>
+          <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
+        </div>
+        <div class="invisible px-12 py-10" style="min-height:280px"></div>
+      </div>
+    </div>
+    <!-- MCQ quiz widget -->
+    <div id="shared-quiz-widget" class="hidden mb-6">
+      <div class="quiz-card">
+        <p id="shared-quiz-question" class="quiz-card__question"></p>
+        <div id="shared-quiz-choices" class="quiz-choices"></div>
+        <p id="shared-quiz-feedback" class="quiz-feedback hidden"></p>
+      </div>
+    </div>
+    <!-- Prev / Next -->
+    <div class="flex justify-between items-center gap-3">
+      <button id="shared-prev-btn" onclick="sharedNavigate('prev')"
+        class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Previous
+      </button>
+      <button id="shared-next-btn" onclick="sharedNavigate('next')"
+        class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+        Next
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
    <!-- Quiz score popup -->
   <div id="quiz-score-popup" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
     <div class="bg-white rounded-2xl shadow-xl p-6 w-80 text-center">
