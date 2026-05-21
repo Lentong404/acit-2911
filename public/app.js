@@ -8,6 +8,8 @@ let selectedType = 'basic'; // Default state is basic
 let quizMode = false;
 let quizAnswered = false;
 let mcqFlipped = false;
+let quizScore = 0;
+let quizTotalAnswer = 0;
 
 // prevents crash on loading decks
 function esc(str) {
@@ -20,7 +22,7 @@ function categorySplit(category) {
   if (!category) return [];
   return category
   .split(',')
-  .map(c => c.trim())
+  .map(c => c.trim().toLowerCase())
   .filter(Boolean);
 }
 
@@ -53,7 +55,7 @@ function addCatToDeck() {
   const input = document.getElementById('deck-category-input');
   if (!input) return;
 
-  const category = input.value.trim();
+  const category = input.value.trim().toLowerCase();
 
   if (!category) return;
 
@@ -222,7 +224,7 @@ function closeDeckModal() { closeModal('deck-modal'); }
 
 async function saveDeck() {
   const title = document.getElementById('deck-title-input').value.trim();
-  const categoryInput = document.getElementById('deck-category-input').value.trim();
+  const categoryInput = document.getElementById('deck-category-input').value.trim().toLowerCase();
 
   if (categoryInput && !selectedDeckCategories.includes(categoryInput)) {
     selectedDeckCategories.push(categoryInput);
@@ -294,6 +296,8 @@ async function openDeck(deckId) {
 
 async function openDeckQuiz(deckId) {
   quizMode = true;
+  quizScore = 0;
+  quizTotalAnswer = 0;
   document.getElementById('card-action-btns')?.classList.add('hidden');
   await openDeck(deckId);
 }
@@ -384,6 +388,23 @@ function renderQuizWidget(card) {
   });
 }
 
+function showQuizScorePopup() {
+  const percent = Math.round((quizScore / quizTotalAnswer) * 100);
+
+  document.getElementById('quiz-score-text').textContent =
+  `Final Score: ${quizScore}/${quizTotalAnswer} (${percent}%)`;
+
+  const popup = document.getElementById(`quiz-score-popup`);
+  popup.classList.remove(`hidden`)
+  popup.classList.add(`flex`)
+}
+
+function closeQuizScorePopup() {
+  const popup = document.getElementById(`quiz-score-popup`);
+  popup.classList.add(`hidden`)
+  popup.classList.remove(`flex`)
+}
+
 function answerQuiz(card, selectedIndex) {
   if (quizAnswered) return;
   quizAnswered = true;
@@ -399,6 +420,8 @@ function answerQuiz(card, selectedIndex) {
     }
   });
   const correct = card.choices[selectedIndex].isCorrect;
+  if (correct) quizScore++;
+  quizTotalAnswer++;
   const feedback = document.getElementById('quiz-feedback');
   feedback.classList.remove('hidden');
   if (correct) {
@@ -409,7 +432,12 @@ function answerQuiz(card, selectedIndex) {
     feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
     feedback.className = 'quiz-feedback quiz-feedback--wrong';
   }
-  playRandomSFX();
+  playAnswerSFX(correct);
+
+  const totalQuiz = cards.filter(card => card.cardType === 'multiple_choice').length;
+  if (quizTotalAnswer === totalQuiz) {
+    showQuizScorePopup();
+  }
 }
 
 function toggleQuizMode() {
@@ -436,6 +464,16 @@ function playRandomSFX() {
       const effectAudio = new Audio(sfxPath);
       
       // Tied to existing sfxVolume slider tracker variable
+      if (typeof sfxVolume === 'number') {
+        effectAudio.volume = sfxVolume;
+      }
+      effectAudio.play().catch(e => console.log("SFX blocked or missing:", e));
+    }
+
+function playAnswerSFX(isCorrect) {
+      const soundFile = isCorrect ? "right.mp3" : "wrong.mp3";
+      const effectAudio = new Audio(`/audio/${soundFile}`);
+      
       if (typeof sfxVolume === 'number') {
         effectAudio.volume = sfxVolume;
       }
