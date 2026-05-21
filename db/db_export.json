@@ -1,81 +1,186 @@
 [
   {
-    "deckId": "deck-b5634f71-81ea-4a4e-9853-abdc21f4e35d",
-    "userId": "user-42c751d3-c121-419c-9a85-4dfaefcae7e2",
-    "username": "alice",
-    "title": "Web Development Essentials",
-    "category": "Programming",
-    "creationTime": "2026-05-20T22:39:58.666Z",
+    "deckId": "deck-221f0686-6519-427f-8375-169d1a0ddbb0",
+    "userId": "user-21c5463d-7dfe-4b8d-8206-71cc1ba3402b",
+    "username": "bob",
+    "title": "World War II Trivia",
+    "category": "History",
+    "creationTime": "2026-05-21T07:14:53.654Z",
     "cards": [
       {
-        "cardId": "card-1cc6aea5-c906-452d-a866-10b71de3ae8a",
-        "question": "What does DOM stand for?",
-        "answer": "Document Object Model",
+        "cardId": "card-2287ef40-0b7f-48d1-ab07-2fa29d1fdfbb",
+        "question": "In what year did World War II officially end?",
+        "answer": "1945",
         "cardType": "basic",
-        "creationTime": "2026-05-20T15:39:58.666191",
+        "position": 0,
+        "creationTime": "2026-05-21T00:14:53.654426",
         "choices": []
       },
       {
-        "cardId": "card-0aa21a51-69a3-4b31-bc4d-47615e556aac",
-        "question": "Which array method returns a shallow copy of a portion of an array?",
-        "answer": "slice",
+        "cardId": "card-d84d4b35-8d49-4c05-9c4e-2df05977c982",
+        "question": "The Battle of Midway is widely considered the turning point of the war in the Pacific.",
+        "answer": "true",
         "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
+        "position": 1,
+        "creationTime": "2026-05-21T00:14:53.654426",
         "choices": [
           {
-            "choiceId": "choice-4385d52f-e78c-423b-9c8e-0bb6decbd377",
-            "choiceText": "splice",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-d1e8b3c4-a760-4d32-aa73-4a9ba9771507",
-            "choiceText": "slice",
+            "choiceId": "choice-78d02985-b249-4cf1-bc76-89731ed6a1b8",
+            "choiceText": "true",
             "isCorrect": true
           },
           {
-            "choiceId": "choice-ba1a44c3-3eca-4648-8b03-2c263da2ced2",
-            "choiceText": "shift",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-323d4723-3ebc-4c31-8d15-f702f5282a90",
-            "choiceText": "push",
+            "choiceId": "choice-79327363-3d86-439b-9e4e-fea9c1b5ede0",
+            "choiceText": "false",
             "isCorrect": false
           }
         ]
       },
       {
-        "cardId": "card-e4b33684-6399-49f5-b77a-6769eb797b87",
-        "question": "JavaScript is a statically typed language.",
-        "answer": "false",
+        "cardId": "card-446ff3e0-cec1-41ab-a651-e79ad77c2436",
+        "question": "Which conference in 1945 brought together Allied leaders to plan Europe's postwar reorganization?",
+        "answer": "Yalta Conference",
         "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
+        "position": 2,
+        "creationTime": "2026-05-21T00:14:53.654426",
         "choices": [
           {
-            "choiceId": "choice-d88eb8f5-862e-4706-9388-a3860f7905d0",
+            "choiceId": "choice-fdb78257-e1be-496d-a8a1-97570c270f0f",
+            "choiceText": "Tehran Conference",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-309bef05-bb7a-4361-8421-85448f99936a",
+            "choiceText": "Potsdam Conference",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-1fccf06d-5c40-4c2a-b8ef-3d4e6a64c5c2",
+            "choiceText": "Yalta Conference",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "cardId": "card-6179e8d2-7179-43f9-adf7-bef0ee6c82f1",
+        "question": "What was the codename for the secret US project that developed the atomic bomb?",
+        "answer": "Manhattan Project",
+        "cardType": "basic",
+        "position": 3,
+        "creationTime": "2026-05-21T00:14:53.654426",
+        "choices": []
+      },
+      {
+        "cardId": "card-e988c223-d401-4b45-bde3-e5506c046079",
+        "question": "The United States joined WWII immediately following the invasion of Poland.",
+        "answer": "false",
+        "cardType": "multiple_choice",
+        "position": 4,
+        "creationTime": "2026-05-21T00:14:53.654426",
+        "choices": [
+          {
+            "choiceId": "choice-3559c136-9551-4ce0-aa62-8ca9d1010bf5",
             "choiceText": "true",
             "isCorrect": false
           },
           {
-            "choiceId": "choice-588d5655-5a9c-4b3a-ba5b-aca3d0e8edca",
+            "choiceId": "choice-8ddcdb02-3ca2-4695-9238-71a2d82a7eea",
             "choiceText": "false",
             "isCorrect": true
           }
         ]
       },
       {
-        "cardId": "card-848ad6f0-36e6-4b2a-96f3-575313088867",
-        "question": "What CSS property controls the stack order of elements?",
-        "answer": "z-index",
-        "cardType": "basic",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": []
+        "cardId": "card-ddcbf156-89f8-4688-9649-29c2837062f2",
+        "question": "Who was the Prime Minister of Great Britain during most of WWII?",
+        "answer": "Winston Churchill",
+        "cardType": "multiple_choice",
+        "position": 5,
+        "creationTime": "2026-05-21T00:14:53.654426",
+        "choices": [
+          {
+            "choiceId": "choice-152e4212-ef77-4de3-ad62-cba5043655b0",
+            "choiceText": "Neville Chamberlain",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-7b7da15e-8e19-4887-82a9-2660de85df60",
+            "choiceText": "Winston Churchill",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-11ef7738-99c0-4b4f-99a1-729692885386",
+            "choiceText": "Clement Attlee",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "deckId": "deck-b499f029-1641-4f02-a8b6-fe556db99d82",
+    "userId": "user-790c8313-a10d-417d-9274-3ce9562c4520",
+    "username": "alice",
+    "title": "tests",
+    "category": "",
+    "creationTime": "2026-05-21T09:59:18.714Z",
+    "cards": [
+      {
+        "cardId": "card-bf3c38ad-d424-4e3e-ab67-a656b901b5aa",
+        "question": "All integers are whole numbers.",
+        "answer": "true",
+        "cardType": "multiple_choice",
+        "position": 0,
+        "creationTime": "2026-05-20T19:59:18.721442",
+        "choices": [
+          {
+            "choiceId": "choice-a0998ecd-8101-412f-bae8-cb5e3f4ac4cd",
+            "choiceText": "true",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-fca366bc-3b65-4861-9f4b-335ff252acb9",
+            "choiceText": "false",
+            "isCorrect": false
+          }
+        ]
       },
+      {
+        "cardId": "card-25bbcddb-7e90-432a-a5d6-9e9a916a4867",
+        "question": "All whole numbers are integers.",
+        "answer": "true",
+        "cardType": "multiple_choice",
+        "position": 1,
+        "creationTime": "2026-05-20T19:59:18.725509",
+        "choices": [
+          {
+            "choiceId": "choice-ec553142-13a8-4006-b401-595b345ad9a4",
+            "choiceText": "true",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-c2baef21-650f-4ff8-8e6d-9a9bd374fbb1",
+            "choiceText": "false",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "deckId": "deck-b5634f71-81ea-4a4e-9853-abdc21f4e35d",
+    "userId": "user-790c8313-a10d-417d-9274-3ce9562c4520",
+    "username": "alice",
+    "title": "Web Development Essentials",
+    "category": "Programming",
+    "creationTime": "2026-05-21T12:39:58.666Z",
+    "cards": [
       {
         "cardId": "card-8fa206b4-efda-499a-ba87-a87ea2c349fe",
         "question": "Which HTTP status code represents a resource that was permanently moved?",
         "answer": "301",
         "cardType": "multiple_choice",
+        "position": 0,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -101,10 +206,20 @@
         ]
       },
       {
+        "cardId": "card-848ad6f0-36e6-4b2a-96f3-575313088867",
+        "question": "What CSS property controls the stack order of elements?",
+        "answer": "z-index",
+        "cardType": "basic",
+        "position": 1,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": []
+      },
+      {
         "cardId": "card-30ccc9ca-2b9b-4f9e-ac1f-f0b518672785",
         "question": "The HTTP 'OPTIONS' method is used to initiate a CORS preflight request.",
         "answer": "true",
         "cardType": "multiple_choice",
+        "position": 2,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -118,81 +233,111 @@
             "isCorrect": false
           }
         ]
+      },
+      {
+        "cardId": "card-0aa21a51-69a3-4b31-bc4d-47615e556aac",
+        "question": "Which array method returns a shallow copy of a portion of an array?",
+        "answer": "slice",
+        "cardType": "multiple_choice",
+        "position": 3,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-4385d52f-e78c-423b-9c8e-0bb6decbd377",
+            "choiceText": "splice",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-d1e8b3c4-a760-4d32-aa73-4a9ba9771507",
+            "choiceText": "slice",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-ba1a44c3-3eca-4648-8b03-2c263da2ced2",
+            "choiceText": "shift",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-323d4723-3ebc-4c31-8d15-f702f5282a90",
+            "choiceText": "push",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "cardId": "card-1cc6aea5-c906-452d-a866-10b71de3ae8a",
+        "question": "What does DOM stand for?",
+        "answer": "Document Object Model",
+        "cardType": "basic",
+        "position": 4,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": []
+      },
+      {
+        "cardId": "card-e4b33684-6399-49f5-b77a-6769eb797b87",
+        "question": "JavaScript is a statically typed language.",
+        "answer": "false",
+        "cardType": "multiple_choice",
+        "position": 5,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-d88eb8f5-862e-4706-9388-a3860f7905d0",
+            "choiceText": "true",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-588d5655-5a9c-4b3a-ba5b-aca3d0e8edca",
+            "choiceText": "false",
+            "isCorrect": true
+          }
+        ]
       }
     ]
   },
   {
     "deckId": "deck-fc225c3e-eed1-4be7-af3a-fcde8b9f1426",
-    "userId": "user-42c751d3-c121-419c-9a85-4dfaefcae7e2",
+    "userId": "user-790c8313-a10d-417d-9274-3ce9562c4520",
     "username": "alice",
     "title": "World War II Trivia",
     "category": "History",
-    "creationTime": "2026-05-20T22:39:58.666Z",
+    "creationTime": "2026-05-21T12:39:58.666Z",
     "cards": [
       {
         "cardId": "card-e6b64f87-c8bb-47ba-af25-c161bcd7e7ed",
         "question": "In what year did World War II officially end?",
         "answer": "1945",
         "cardType": "basic",
+        "position": 0,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": []
       },
       {
-        "cardId": "card-07fe7bef-9226-4e90-823e-cbeea0a9b9ae",
-        "question": "Who was the Prime Minister of Great Britain during most of WWII?",
-        "answer": "Winston Churchill",
+        "cardId": "card-9e4b9c79-27ca-416d-bf6e-a4e6320d88a9",
+        "question": "The Battle of Midway is widely considered the turning point of the war in the Pacific.",
+        "answer": "true",
         "cardType": "multiple_choice",
+        "position": 1,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
-            "choiceId": "choice-56607b62-2ca0-426b-8b81-cdd1fdbd3f0b",
-            "choiceText": "Neville Chamberlain",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-3835b607-e93d-400b-80d5-c870cce2bc07",
-            "choiceText": "Winston Churchill",
-            "isCorrect": true
-          },
-          {
-            "choiceId": "choice-ba711cc8-1341-43d7-9cb4-d818f7a4a76b",
-            "choiceText": "Clement Attlee",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "cardId": "card-4400342d-a259-4df6-9c5d-8a470ee4dfdb",
-        "question": "The United States joined WWII immediately following the invasion of Poland.",
-        "answer": "false",
-        "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": [
-          {
-            "choiceId": "choice-91f333a2-bad5-4d69-af49-06a7ae1e537a",
+            "choiceId": "choice-431afc9b-f13a-41ee-9b21-cbdc2057ea55",
             "choiceText": "true",
-            "isCorrect": false
+            "isCorrect": true
           },
           {
-            "choiceId": "choice-aa6e955b-02cb-45a5-9430-997ee8a73492",
+            "choiceId": "choice-42168e8f-7379-4ece-8312-c0c9da0f24c8",
             "choiceText": "false",
-            "isCorrect": true
+            "isCorrect": false
           }
         ]
-      },
-      {
-        "cardId": "card-ca927059-b55c-48b8-9b79-de325245079f",
-        "question": "What was the codename for the secret US project that developed the atomic bomb?",
-        "answer": "Manhattan Project",
-        "cardType": "basic",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": []
       },
       {
         "cardId": "card-a11c3b8b-aa20-46cc-af1d-96750e840dc1",
         "question": "Which conference in 1945 brought together Allied leaders to plan Europe's postwar reorganization?",
         "answer": "Yalta Conference",
         "cardType": "multiple_choice",
+        "position": 2,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -213,20 +358,55 @@
         ]
       },
       {
-        "cardId": "card-9e4b9c79-27ca-416d-bf6e-a4e6320d88a9",
-        "question": "The Battle of Midway is widely considered the turning point of the war in the Pacific.",
-        "answer": "true",
+        "cardId": "card-ca927059-b55c-48b8-9b79-de325245079f",
+        "question": "What was the codename for the secret US project that developed the atomic bomb?",
+        "answer": "Manhattan Project",
+        "cardType": "basic",
+        "position": 3,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": []
+      },
+      {
+        "cardId": "card-4400342d-a259-4df6-9c5d-8a470ee4dfdb",
+        "question": "The United States joined WWII immediately following the invasion of Poland.",
+        "answer": "false",
         "cardType": "multiple_choice",
+        "position": 4,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
-            "choiceId": "choice-431afc9b-f13a-41ee-9b21-cbdc2057ea55",
+            "choiceId": "choice-91f333a2-bad5-4d69-af49-06a7ae1e537a",
             "choiceText": "true",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-aa6e955b-02cb-45a5-9430-997ee8a73492",
+            "choiceText": "false",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "cardId": "card-07fe7bef-9226-4e90-823e-cbeea0a9b9ae",
+        "question": "Who was the Prime Minister of Great Britain during most of WWII?",
+        "answer": "Winston Churchill",
+        "cardType": "multiple_choice",
+        "position": 5,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-56607b62-2ca0-426b-8b81-cdd1fdbd3f0b",
+            "choiceText": "Neville Chamberlain",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-3835b607-e93d-400b-80d5-c870cce2bc07",
+            "choiceText": "Winston Churchill",
             "isCorrect": true
           },
           {
-            "choiceId": "choice-42168e8f-7379-4ece-8312-c0c9da0f24c8",
-            "choiceText": "false",
+            "choiceId": "choice-ba711cc8-1341-43d7-9cb4-d818f7a4a76b",
+            "choiceText": "Clement Attlee",
             "isCorrect": false
           }
         ]
@@ -235,25 +415,101 @@
   },
   {
     "deckId": "deck-16a81789-81e3-4d26-8604-686f1f881124",
-    "userId": "user-b49d8120-3cc6-4546-b9f4-c3aad89fd885",
+    "userId": "user-21c5463d-7dfe-4b8d-8206-71cc1ba3402b",
     "username": "bob",
     "title": "Advanced PostgreSQL Internals",
     "category": "Databases",
-    "creationTime": "2026-05-20T22:39:58.666Z",
+    "creationTime": "2026-05-21T12:39:58.666Z",
     "cards": [
       {
         "cardId": "card-ea80bbc6-d00c-458a-896d-6f1489393434",
         "question": "What mechanism does PostgreSQL use to handle concurrent modifications without locking rows?",
         "answer": "MVCC",
         "cardType": "basic",
+        "position": 0,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": []
+      },
+      {
+        "cardId": "card-0fab480e-d822-4fba-87f5-25031dfa3e61",
+        "question": "The GIN (Generalized Inverted Index) type is suboptimal for full-text search indexing.",
+        "answer": "false",
+        "cardType": "multiple_choice",
+        "position": 1,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-d512581c-78dd-414a-93d6-d057cf13e3d0",
+            "choiceText": "true",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-537ca304-844a-4f75-90cb-e5f1a5c13336",
+            "choiceText": "false",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "cardId": "card-caaf0a7f-4363-4e92-bde3-33806d1545b5",
+        "question": "Which isolation level completely prevents serialization anomalies and write skew?",
+        "answer": "Serializable",
+        "cardType": "multiple_choice",
+        "position": 2,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-14fc613e-ce4f-4e07-9c37-47d47f85c760",
+            "choiceText": "Read Committed",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-7665befd-8a18-4ac7-a128-769339f8fe14",
+            "choiceText": "Repeatable Read",
+            "isCorrect": false
+          },
+          {
+            "choiceId": "choice-aea655e3-8f45-48a7-a778-8fbd3e3445ad",
+            "choiceText": "Serializable",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "cardId": "card-77cd167f-1fd6-457a-9b53-9eacb5d8aced",
+        "question": "What parameter determines the maximum size of transaction logs stored before a checkpoint?",
+        "answer": "max_wal_size",
+        "cardType": "basic",
+        "position": 3,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": []
+      },
+      {
+        "cardId": "card-55cac580-6db9-4b48-ab90-54a8cded5781",
+        "question": "Running VACUUM FULL always requires a full table lock.",
+        "answer": "true",
+        "cardType": "multiple_choice",
+        "position": 4,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-11b28170-13ba-4641-991b-3c0d0f77ee2b",
+            "choiceText": "true",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-70dbc885-8493-4858-b865-b980fb8ffc25",
+            "choiceText": "false",
+            "isCorrect": false
+          }
+        ]
       },
       {
         "cardId": "card-cad06d91-7c2b-449a-bf86-10a8c0dd46aa",
         "question": "Which index type is default and handles equality and range queries?",
         "answer": "B-Tree",
         "cardType": "multiple_choice",
+        "position": 5,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -277,92 +533,43 @@
             "isCorrect": false
           }
         ]
-      },
-      {
-        "cardId": "card-55cac580-6db9-4b48-ab90-54a8cded5781",
-        "question": "Running VACUUM FULL always requires a full table lock.",
-        "answer": "true",
-        "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": [
-          {
-            "choiceId": "choice-11b28170-13ba-4641-991b-3c0d0f77ee2b",
-            "choiceText": "true",
-            "isCorrect": true
-          },
-          {
-            "choiceId": "choice-70dbc885-8493-4858-b865-b980fb8ffc25",
-            "choiceText": "false",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "cardId": "card-77cd167f-1fd6-457a-9b53-9eacb5d8aced",
-        "question": "What parameter determines the maximum size of transaction logs stored before a checkpoint?",
-        "answer": "max_wal_size",
-        "cardType": "basic",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": []
-      },
-      {
-        "cardId": "card-caaf0a7f-4363-4e92-bde3-33806d1545b5",
-        "question": "Which isolation level completely prevents serialization anomalies and write skew?",
-        "answer": "Serializable",
-        "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": [
-          {
-            "choiceId": "choice-14fc613e-ce4f-4e07-9c37-47d47f85c760",
-            "choiceText": "Read Committed",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-7665befd-8a18-4ac7-a128-769339f8fe14",
-            "choiceText": "Repeatable Read",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-aea655e3-8f45-48a7-a778-8fbd3e3445ad",
-            "choiceText": "Serializable",
-            "isCorrect": true
-          }
-        ]
-      },
-      {
-        "cardId": "card-0fab480e-d822-4fba-87f5-25031dfa3e61",
-        "question": "The GIN (Generalized Inverted Index) type is suboptimal for full-text search indexing.",
-        "answer": "false",
-        "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": [
-          {
-            "choiceId": "choice-d512581c-78dd-414a-93d6-d057cf13e3d0",
-            "choiceText": "true",
-            "isCorrect": false
-          },
-          {
-            "choiceId": "choice-537ca304-844a-4f75-90cb-e5f1a5c13336",
-            "choiceText": "false",
-            "isCorrect": true
-          }
-        ]
       }
     ]
   },
   {
     "deckId": "deck-dfd16689-28ad-4d61-8274-ae1ba23daee4",
-    "userId": "user-b49d8120-3cc6-4546-b9f4-c3aad89fd885",
+    "userId": "user-21c5463d-7dfe-4b8d-8206-71cc1ba3402b",
     "username": "bob",
     "title": "Web Application Security",
     "category": "Cybersecurity",
-    "creationTime": "2026-05-20T22:39:58.666Z",
+    "creationTime": "2026-05-21T12:39:58.666Z",
     "cards": [
+      {
+        "cardId": "card-b47e53f5-c948-4852-b5ea-437e6d6c60fe",
+        "question": "Using parameterized queries natively protects database targets from classic SQL injection vectors.",
+        "answer": "true",
+        "cardType": "multiple_choice",
+        "position": 0,
+        "creationTime": "2026-05-20T15:39:58.666191",
+        "choices": [
+          {
+            "choiceId": "choice-1fd1d3fb-fd11-432a-9106-23500a8c0951",
+            "choiceText": "true",
+            "isCorrect": true
+          },
+          {
+            "choiceId": "choice-2902b075-8843-4b2b-9f66-2926e34a3b29",
+            "choiceText": "false",
+            "isCorrect": false
+          }
+        ]
+      },
       {
         "cardId": "card-578e232e-2be8-4433-821a-9a2724e11ad6",
         "question": "What does CORS stand for?",
         "answer": "Cross-Origin Resource Sharing",
         "cardType": "basic",
+        "position": 1,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": []
       },
@@ -371,6 +578,7 @@
         "question": "Which cookie attribute prevents client-side scripts from reading cookie tokens?",
         "answer": "HttpOnly",
         "cardType": "multiple_choice",
+        "position": 2,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -395,6 +603,7 @@
         "question": "A Content Security Policy (CSP) can fully eliminate risk from XSS attacks when misconfigured.",
         "answer": "false",
         "cardType": "multiple_choice",
+        "position": 3,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -414,6 +623,7 @@
         "question": "What attack payload vector tricks a authenticated browser into performing actions it didn't intend to?",
         "answer": "CSRF",
         "cardType": "basic",
+        "position": 4,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": []
       },
@@ -422,6 +632,7 @@
         "question": "Which cryptographic primitive is best suited for hashing human passwords?",
         "answer": "argon2id",
         "cardType": "multiple_choice",
+        "position": 5,
         "creationTime": "2026-05-20T15:39:58.666191",
         "choices": [
           {
@@ -438,25 +649,6 @@
             "choiceId": "choice-f892b2cb-ab8e-4905-90fb-0041de96c63c",
             "choiceText": "argon2id",
             "isCorrect": true
-          }
-        ]
-      },
-      {
-        "cardId": "card-b47e53f5-c948-4852-b5ea-437e6d6c60fe",
-        "question": "Using parameterized queries natively protects database targets from classic SQL injection vectors.",
-        "answer": "true",
-        "cardType": "multiple_choice",
-        "creationTime": "2026-05-20T15:39:58.666191",
-        "choices": [
-          {
-            "choiceId": "choice-1fd1d3fb-fd11-432a-9106-23500a8c0951",
-            "choiceText": "true",
-            "isCorrect": true
-          },
-          {
-            "choiceId": "choice-2902b075-8843-4b2b-9f66-2926e34a3b29",
-            "choiceText": "false",
-            "isCorrect": false
           }
         ]
       }

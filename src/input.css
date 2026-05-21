@@ -38,6 +38,12 @@ button { cursor: pointer; user-select: none; }
   @apply !border-stone-900 bg-stone-900 text-white;
 }
 
+/* Unanswered questions label — theme aware */
+body.theme-ocean #quiz-unanswered-label { background-color: #1d4ed8; }
+body.theme-forest #quiz-unanswered-label { background-color: #15803d; }
+body.theme-dark #quiz-unanswered-label,
+body.dark #quiz-unanswered-label { background-color: #dc2626; }
+
 /* Flashcard text wrapping */
 #card-question,
 #card-answer {
@@ -432,6 +438,12 @@ body.theme-dark .hover\:bg-stone-100:hover,
 body.dark .hover\:bg-stone-100:hover { background-color: #44403c !important; }
 body.theme-dark .hover\:bg-stone-700:hover,
 body.dark .hover\:bg-stone-700:hover { background-color: #3a3836 !important; }
+body.theme-dark .hover\:bg-red-50:hover,
+body.dark .hover\:bg-red-50:hover    { background-color: #4a2020 !important; }
+body.theme-dark .shuffle-selected,
+body.theme-dark .shuffle-selected:hover,
+body.dark .shuffle-selected,
+body.dark .shuffle-selected:hover    { color: #1c1917 !important; }
 
 /* Flip card */
 body.theme-dark #flashcard-inner .card-face:first-child,

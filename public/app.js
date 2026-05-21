@@ -12,6 +12,10 @@ let quizScore = 0;
 let quizTotalAnswer = 0;
 let wrongCardIndices = [];
 let fullDeckCards = [];
+let answeredCardIndices = new Set();
+let reachedEnd = false;
+let unansweredQueue = [];
+const shuffledDeckIds = new Set(JSON.parse(localStorage.getItem('shuffledDecks') || '[]'));
 
 // prevents crash on loading decks
 function esc(str) {
@@ -198,11 +202,11 @@ function renderGrid(decks = null) {
           </svg>
         </button>
       </div>
-      ${categorySplit(d.category).length ? `<div class="flex flex-wrap gap-1"> ${categorySplit(d.category).map(category => 
+      ${categorySplit(d.category).length ? `<div class="flex flex-wrap gap-1"> ${categorySplit(d.category).map(category =>
         `<span class="inline-block text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"> ${esc(category)} </span> `).join('')} </div>` : '<span></span>' }
       <div class="flex items-center justify-between mt-auto pt-2">
         <span class="text-sm text-stone-400">${d.cardCount} card${d.cardCount !== 1 ? 's' : ''}</span>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
           <button onclick="openEditDeckModal(this.dataset.id, this.dataset.title, this.dataset.category)"
             data-id="${esc(d.id)}" data-title="${esc(d.title)}" data-category="${esc(d.category||'')}"
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors">
@@ -216,6 +220,13 @@ function renderGrid(decks = null) {
             class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
             title="Share deck">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button onclick="toggleShuffle('${d.id}')"
+            title="${shuffledDeckIds.has(d.id) ? 'Shuffle on — click to disable' : 'Shuffle off — click to enable'}"
+            class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${shuffledDeckIds.has(d.id) ? 'shuffle-selected text-stone-700 bg-stone-200 hover:text-stone-900 hover:bg-stone-300' : 'text-stone-300 hover:text-stone-600 hover:bg-stone-100'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>
+            </svg>
           </button>
           <button onclick="openDeck('${d.id}')"
             class="px-4 py-1.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
@@ -278,8 +289,20 @@ async function saveDeck() {
 async function deleteDeck(id) {
   if (!confirm('Delete this deck and all its cards?')) return;
   await api('DELETE', `/decks/${id}`);
+  shuffledDeckIds.delete(id);
+  localStorage.setItem('shuffledDecks', JSON.stringify([...shuffledDeckIds]));
   showToast('Deck deleted');
   loadDecks();
+}
+
+function toggleShuffle(deckId) {
+  if (shuffledDeckIds.has(deckId)) {
+    shuffledDeckIds.delete(deckId);
+  } else {
+    shuffledDeckIds.add(deckId);
+  }
+  localStorage.setItem('shuffledDecks', JSON.stringify([...shuffledDeckIds]));
+  renderGrid();
 }
 
 //  Share
@@ -320,6 +343,12 @@ async function openDeck(deckId) {
   currentCardIndex = 0;
   const deck = await api('GET', `/decks/${deckId}`);
   cards = deck.cards;
+  if (shuffledDeckIds.has(deckId)) {
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+  }
   document.getElementById('study-title').textContent = deck.title;
   renderStudyView();
   showView('study-view');
@@ -330,6 +359,9 @@ async function openDeckQuiz(deckId) {
   quizScore = 0;
   quizTotalAnswer = 0;
   wrongCardIndices = [];
+  answeredCardIndices = new Set();
+  reachedEnd = false;
+  unansweredQueue = [];
   document.getElementById('card-action-btns')?.classList.add('hidden');
   await openDeck(deckId);
   fullDeckCards = [...cards]; // snapshot full deck after load
@@ -352,8 +384,26 @@ function renderStudyView() {
 
   document.getElementById('card-counter').textContent = `Card ${currentCardIndex + 1} of ${cards.length}`;
   document.getElementById('progress-fill').style.width = `${((currentCardIndex + 1) / cards.length) * 100}%`;
-  document.getElementById('prev-btn').disabled = currentCardIndex === 0;
-  document.getElementById('next-btn').disabled = currentCardIndex === cards.length - 1;
+
+  // On the last card in quiz mode, detect skipped cards and enter unanswered mode
+  if (quizMode && !reachedEnd && currentCardIndex === cards.length - 1) {
+    const unanswered = cards.map((_, i) => i).filter(i => !answeredCardIndices.has(i));
+    const skippedOthers = unanswered.filter(i => i !== currentCardIndex);
+    if (skippedOthers.length > 0) {
+      reachedEnd = true;
+      unansweredQueue = [...unanswered]; // includes current card so it's tracked
+      updateUnansweredLabel();
+    }
+  }
+
+  if (reachedEnd && unansweredQueue.length > 0) {
+    const lockedOnLast = unansweredQueue.length === 1 && currentCardIndex === unansweredQueue[0];
+    document.getElementById('prev-btn').disabled = lockedOnLast;
+    document.getElementById('next-btn').disabled = lockedOnLast;
+  } else {
+    document.getElementById('prev-btn').disabled = currentCardIndex === 0;
+    document.getElementById('next-btn').disabled = currentCardIndex === cards.length - 1;
+  }
 
   const flipWrapper = document.getElementById('flashcard-inner')?.closest('[style*="perspective"]');
   const mcqView    = document.getElementById('mcq-view');
@@ -442,14 +492,18 @@ function closeQuizScorePopup() {
 function restartQuiz(wrongOnly = false) {
   closeQuizScorePopup();
   if (wrongOnly && wrongCardIndices.length > 0) {
-    cards = wrongCardIndices.map(i => fullDeckCards[i]);
+    cards = [...wrongCardIndices];
   } else {
-    cards = [...fullDeckCards]; // always restore full deck
+    cards = [...fullDeckCards];
   }
   quizScore = 0;
   quizTotalAnswer = 0;
   wrongCardIndices = [];
+  answeredCardIndices = new Set();
+  reachedEnd = false;
+  unansweredQueue = [];
   currentCardIndex = 0;
+  document.getElementById('quiz-unanswered-label')?.classList.add('hidden');
   renderStudyView();
 }
 
@@ -469,8 +523,9 @@ function answerQuiz(card, selectedIndex) {
   });
   const correct = card.choices[selectedIndex].isCorrect;
   if (correct) quizScore++;
-  else wrongCardIndices.push(currentCardIndex);
+  else wrongCardIndices.push(cards[currentCardIndex]);
   quizTotalAnswer++;
+  answeredCardIndices.add(currentCardIndex);
   const feedback = document.getElementById('quiz-feedback');
   feedback.classList.remove('hidden');
   if (correct) {
@@ -483,9 +538,45 @@ function answerQuiz(card, selectedIndex) {
   }
   playAnswerSFX(correct);
 
-  if (quizTotalAnswer === cards.length) {
+  if (reachedEnd) {
+    unansweredQueue = unansweredQueue.filter(i => i !== currentCardIndex);
+    updateUnansweredLabel();
+    if (unansweredQueue.length === 0) {
+      setTimeout(() => showQuizScorePopup(), 450);
+    }
+  } else if (quizTotalAnswer === cards.length) {
     setTimeout(() => showQuizScorePopup(), 450);
   }
+}
+
+function updateUnansweredLabel() {
+  const label = document.getElementById('quiz-unanswered-label');
+  if (!label) return;
+  if (!reachedEnd) { label.classList.add('hidden'); return; }
+  const remaining = unansweredQueue.length;
+  label.textContent = `${remaining} question${remaining !== 1 ? 's' : ''} remaining`;
+  label.classList.toggle('hidden', remaining === 0);
+}
+
+function navigateUnanswered(direction) {
+  if (!unansweredQueue.length) return;
+  if (unansweredQueue.length === 1) {
+    // Navigate to the only remaining card if not already on it
+    if (currentCardIndex !== unansweredQueue[0]) {
+      currentCardIndex = unansweredQueue[0];
+      renderStudyView();
+    }
+    return;
+  }
+  if (direction === 'next') {
+    const next = unansweredQueue.find(i => i > currentCardIndex) ?? unansweredQueue[0];
+    currentCardIndex = next;
+  } else {
+    const prev = [...unansweredQueue].reverse().find(i => i < currentCardIndex)
+      ?? unansweredQueue[unansweredQueue.length - 1];
+    currentCardIndex = prev;
+  }
+  renderStudyView();
 }
 
 function toggleQuizMode() {
@@ -545,10 +636,19 @@ const flipPreviewCard = flipCard;
 
 function selfAssess(correct) {
   if (correct) quizScore++;
-  else wrongCardIndices.push(currentCardIndex);
+  else wrongCardIndices.push(cards[currentCardIndex]);
   quizTotalAnswer++;
+  answeredCardIndices.add(currentCardIndex);
   playAnswerSFX(correct);
-  if (quizTotalAnswer === cards.length) {
+  if (reachedEnd) {
+    unansweredQueue = unansweredQueue.filter(i => i !== currentCardIndex);
+    updateUnansweredLabel();
+    if (unansweredQueue.length === 0) {
+      setTimeout(() => showQuizScorePopup(), 450);
+    } else {
+      setTimeout(() => navigateUnanswered('next'), 400);
+    }
+  } else if (quizTotalAnswer === cards.length) {
     setTimeout(() => showQuizScorePopup(), 450);
   } else {
     setTimeout(() => navigateCards('next'), 400);
@@ -558,15 +658,19 @@ function selfAssess(correct) {
 // function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
 function navigateCards(direction) {
+  // In unanswered mode, delegate to navigateUnanswered
+  if (reachedEnd && unansweredQueue.length > 0) {
+    navigateUnanswered(direction);
+    return;
+  }
+
   const cardElement = document.getElementById('flashcard-inner');
   const mcqCard = document.querySelector('#mcq-view .mcq-card');
 
-  // Snap flip card to question-side instantly (no transition)
   cardElement.style.transition = 'none';
   cardElement.style.transform = 'rotateY(0deg)';
   isFlipped = false;
 
-  // Snap MCQ browse card to question-side instantly
   if (mcqCard) {
     mcqCard.querySelectorAll('.mcq-card__front, .mcq-card__back').forEach(face => {
       face.style.transition = 'none';
@@ -576,7 +680,18 @@ function navigateCards(direction) {
   }
 
   if (direction === 'next') {
-    if (currentCardIndex < cards.length - 1) currentCardIndex++;
+    if (currentCardIndex < cards.length - 1) {
+      currentCardIndex++;
+    } else if (quizMode) {
+      // Reached the end — check for unanswered cards
+      const unanswered = cards.map((_, i) => i).filter(i => !answeredCardIndices.has(i));
+      if (unanswered.length > 0) {
+        reachedEnd = true;
+        unansweredQueue = [...unanswered];
+        updateUnansweredLabel();
+        currentCardIndex = unansweredQueue[0];
+      }
+    }
   } else {
     if (currentCardIndex > 0) currentCardIndex--;
   }
@@ -584,7 +699,6 @@ function navigateCards(direction) {
   renderStudyView();
   playRandomSFX();
 
-  // Re-enable transitions after the frame has painted
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       cardElement.style.transition = '';
@@ -972,6 +1086,13 @@ let sharedFlipped = false;
 let sharedQuizAnswered = false;
 let sharedToken = null;
 let sharedIsLoggedIn = false;
+let sharedScore = 0;
+let sharedTotalAnswered = 0;
+let sharedWrongCards = [];
+let sharedFullDeckCards = [];
+let sharedAnsweredCardIndices = new Set();
+let sharedReachedEnd = false;
+let sharedUnansweredQueue = [];
 
 //  Init 
 async function init() {
@@ -1577,6 +1698,14 @@ function sharedStartQuiz() {
   const { deck, cards } = sharedDeckData;
   sharedCardIndex = 0;
   sharedFlipped = false;
+  sharedScore = 0;
+  sharedTotalAnswered = 0;
+  sharedWrongCards = [];
+  sharedFullDeckCards = [...sharedDeckData.cards];
+  sharedAnsweredCardIndices = new Set();
+  sharedReachedEnd = false;
+  sharedUnansweredQueue = [];
+  document.getElementById('shared-unanswered-label')?.classList.add('hidden');
   document.getElementById('shared-quiz-title').textContent = deck.title;
   sharedRenderCard();
   showView('shared-quiz-view');
@@ -1593,8 +1722,25 @@ function sharedRenderCard() {
     `Card ${sharedCardIndex + 1} of ${cards.length}`;
   document.getElementById('shared-progress-fill').style.width =
     `${((sharedCardIndex + 1) / cards.length) * 100}%`;
-  document.getElementById('shared-prev-btn').disabled = sharedCardIndex === 0;
-  document.getElementById('shared-next-btn').disabled = sharedCardIndex === cards.length - 1;
+
+  // On the last card, detect unanswered cards and enter unanswered mode
+  if (!sharedReachedEnd && sharedCardIndex === cards.length - 1) {
+    const unanswered = cards.map((_, i) => i).filter(i => !sharedAnsweredCardIndices.has(i));
+    if (unanswered.length > 0) {
+      sharedReachedEnd = true;
+      sharedUnansweredQueue = [...unanswered];
+      updateSharedUnansweredLabel();
+    }
+  }
+
+  if (sharedReachedEnd && sharedUnansweredQueue.length > 0) {
+    const lockedOnLast = sharedUnansweredQueue.length === 1 && sharedCardIndex === sharedUnansweredQueue[0];
+    document.getElementById('shared-prev-btn').disabled = lockedOnLast;
+    document.getElementById('shared-next-btn').disabled = lockedOnLast;
+  } else {
+    document.getElementById('shared-prev-btn').disabled = sharedCardIndex === 0;
+    document.getElementById('shared-next-btn').disabled = sharedCardIndex === cards.length - 1;
+  }
 
   const flipWrapper = document.getElementById('shared-flip-wrapper');
   const quizWidget  = document.getElementById('shared-quiz-widget');
@@ -1626,9 +1772,24 @@ function sharedFlipCard() {
 }
 
 function sharedSelfAssess(correct) {
-  // Navigate to next card after brief pause
-  setTimeout(() => sharedNavigate('next'), 400);
-  playRandomSFX();
+  if (correct) sharedScore++;
+  else sharedWrongCards.push(sharedDeckData.cards[sharedCardIndex]);
+  sharedTotalAnswered++;
+  sharedAnsweredCardIndices.add(sharedCardIndex);
+  playAnswerSFX(correct);
+  if (sharedReachedEnd) {
+    sharedUnansweredQueue = sharedUnansweredQueue.filter(i => i !== sharedCardIndex);
+    updateSharedUnansweredLabel();
+    if (sharedUnansweredQueue.length === 0) {
+      setTimeout(() => showSharedScorePopup(), 450);
+    } else {
+      setTimeout(() => sharedNavigateUnanswered('next'), 400);
+    }
+  } else if (sharedTotalAnswered === sharedDeckData.cards.length) {
+    setTimeout(() => showSharedScorePopup(), 450);
+  } else {
+    setTimeout(() => sharedNavigate('next'), 400);
+  }
 }
 
 function sharedRenderQuiz(card) {
@@ -1665,6 +1826,10 @@ function sharedAnswerQuiz(card, selectedIndex) {
     }
   });
   const correct = card.choices[selectedIndex].isCorrect;
+  if (correct) sharedScore++;
+  else sharedWrongCards.push(sharedDeckData.cards[sharedCardIndex]);
+  sharedTotalAnswered++;
+  sharedAnsweredCardIndices.add(sharedCardIndex);
   const feedback = document.getElementById('shared-quiz-feedback');
   feedback.classList.remove('hidden');
   if (correct) {
@@ -1675,11 +1840,96 @@ function sharedAnswerQuiz(card, selectedIndex) {
     feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
     feedback.className = 'quiz-feedback quiz-feedback--wrong';
   }
+  playAnswerSFX(correct);
+  if (sharedReachedEnd) {
+    sharedUnansweredQueue = sharedUnansweredQueue.filter(i => i !== sharedCardIndex);
+    updateSharedUnansweredLabel();
+    if (sharedUnansweredQueue.length === 0) {
+      setTimeout(() => showSharedScorePopup(), 450);
+    }
+    // No auto-navigate for MCQ — user presses Next to continue
+  } else if (sharedTotalAnswered === sharedDeckData.cards.length) {
+    setTimeout(() => showSharedScorePopup(), 450);
+  }
+}
+
+function showSharedScorePopup() {
+  const percent = Math.round((sharedScore / sharedTotalAnswered) * 100);
+  document.getElementById('quiz-score-text').textContent =
+    `Final Score: ${sharedScore}/${sharedTotalAnswered} (${percent}%)`;
+  const retestWrongBtn = document.getElementById('retest-wrong-btn');
+  if (retestWrongBtn) retestWrongBtn.classList.toggle('hidden', sharedWrongCards.length === 0);
+  document.querySelector('#quiz-score-popup button')
+    ?.setAttribute('onclick', 'sharedRestartQuiz(false)');
+  if (retestWrongBtn) retestWrongBtn.setAttribute('onclick', 'sharedRestartQuiz(true)');
+  const popup = document.getElementById('quiz-score-popup');
+  popup.classList.remove('hidden');
+  popup.classList.add('flex');
+}
+
+function sharedRestartQuiz(wrongOnly = false) {
+  closeQuizScorePopup();
+  document.querySelector('#quiz-score-popup button')
+    ?.setAttribute('onclick', 'restartQuiz(false)');
+  const wrongBtn = document.getElementById('retest-wrong-btn');
+  if (wrongBtn) wrongBtn.setAttribute('onclick', 'restartQuiz(true)');
+  if (wrongOnly && sharedWrongCards.length > 0) {
+    sharedDeckData = { ...sharedDeckData, cards: [...sharedWrongCards] };
+  } else {
+    sharedDeckData = { ...sharedDeckData, cards: [...sharedFullDeckCards] };
+  }
+  sharedScore = 0;
+  sharedTotalAnswered = 0;
+  sharedWrongCards = [];
+  sharedCardIndex = 0;
+  sharedAnsweredCardIndices = new Set();
+  sharedReachedEnd = false;
+  sharedUnansweredQueue = [];
+  document.getElementById('shared-unanswered-label')?.classList.add('hidden');
+  sharedRenderCard();
+}
+
+function updateSharedUnansweredLabel() {
+  const label = document.getElementById('shared-unanswered-label');
+  if (!label) return;
+  if (!sharedReachedEnd) { label.classList.add('hidden'); return; }
+  const remaining = sharedUnansweredQueue.length;
+  label.textContent = `${remaining} question${remaining !== 1 ? 's' : ''} remaining`;
+  label.classList.toggle('hidden', remaining === 0);
+}
+
+function sharedNavigateUnanswered(direction) {
+  if (!sharedUnansweredQueue.length) return;
+  if (sharedUnansweredQueue.length === 1) {
+    // Navigate to the only remaining card if not already on it
+    if (sharedCardIndex !== sharedUnansweredQueue[0]) {
+      sharedCardIndex = sharedUnansweredQueue[0];
+      sharedRenderCard();
+      playRandomSFX();
+    }
+    return;
+  }
+  if (direction === 'next') {
+    const next = sharedUnansweredQueue.find(i => i > sharedCardIndex) ?? sharedUnansweredQueue[0];
+    sharedCardIndex = next;
+  } else {
+    const prev = [...sharedUnansweredQueue].reverse().find(i => i < sharedCardIndex)
+      ?? sharedUnansweredQueue[sharedUnansweredQueue.length - 1];
+    sharedCardIndex = prev;
+  }
+  sharedRenderCard();
   playRandomSFX();
 }
 
 function sharedNavigate(direction) {
   const { cards } = sharedDeckData;
+
+  // Delegate to unanswered navigation when in that mode
+  if (sharedReachedEnd && sharedUnansweredQueue.length > 0) {
+    sharedNavigateUnanswered(direction);
+    return;
+  }
+
   const inner = document.getElementById('shared-flashcard-inner');
   if (inner) {
     inner.style.transition = 'none';

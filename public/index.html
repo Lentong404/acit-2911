@@ -215,6 +215,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Previous
         </button>
+        <span id="quiz-unanswered-label" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500 text-white text-center whitespace-nowrap"></span>
         <button id="next-btn" onclick="navigateCards('next')"
           class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
           Next
@@ -266,27 +267,23 @@
       </div>
       <div class="mb-6">
         <label class="block text-sm font-semibold mb-2">Category <span class="font-normal text-stone-400">(optional)</span></label>
-        <div class="relative">
-          <div class="flex gap-2">
-            <input id="deck-category-input" type="text" maxlength="20"
-              placeholder="Type a category…"
-              autocomplete="off"
-              oninput="showCategorySuggestions()"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();addCatToDeck();}"
-              class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
-            <button onclick="addCatToDeck()" type="button"
-              class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
-              Add
-            </button>
-          </div>
-          <ul id="category-suggestions"
-            class="hidden absolute z-10 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden text-sm"></ul>
-        </div>
-        <div id="deck-category-preview"
-          class="w-full mt-3 min-h-14 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-500 flex flex-wrap gap-2">
-          No categories selected
-        </div>
-        <p class="text-xs text-stone-400 mt-2">Type a category and click Add. You can add multiple.</p>
+        <div class="flex gap-2">
+        <input id="deck-category-input" list="category-options" type="text" maxlength="20"
+        placeholder="Type or select a category"
+        class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+        <button onclick="addCatToDeck()" type="button"
+        class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
+        Add
+        </button>
+      </div>
+    <datalist id="category-options"></datalist>
+  <div id="deck-category-preview"
+    class="w-full mt-3 min-h-14 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-500 flex flex-wrap gap-2">
+    No categories selected
+  </div>
+    <p class="text-xs text-stone-400 mt-2">
+    Type or select a category, click Add, then create the deck.
+    </p>
       </div>
       <div class="flex justify-end gap-3">
         <button onclick="closeDeckModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
@@ -571,12 +568,12 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
         Previous
       </button>
+      <span id="shared-unanswered-label" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500 text-white text-center whitespace-nowrap"></span>
       <button id="shared-next-btn" onclick="sharedNavigate('next')"
         class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
         Next
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
+      </button>
     </div>
   </div>
 
@@ -585,7 +582,6 @@
     <div class="bg-white rounded-2xl shadow-xl p-6 w-80 text-center">
       <h2 class="text-xl font-bold text-stone-900 mb-2">Quiz Finished!</h2>
       <p id="quiz-score-text" class="text-stone-700 mb-4"></p>
-
       <div class="flex gap-3 justify-center">
         <button onclick="restartQuiz(false)"
           class="px-4 py-2 bg-stone-900 text-white rounded-xl font-semibold hover:bg-stone-700 transition-colors">

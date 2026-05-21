@@ -184,8 +184,8 @@ app.get("/api/decks/:deckId", requireAuth, async (req, res) => {
     }
 
     const totalCards = await pool.query(
-      `SELECT 
-        c.id, c.question, c.answer, c.card_type AS "cardType",
+      `SELECT
+        c.id, c.question, c.answer, c.card_type AS "cardType", c.position,
         COALESCE(
           json_agg(
             json_build_object('id', cc.id, 'choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
@@ -195,7 +195,7 @@ app.get("/api/decks/:deckId", requireAuth, async (req, res) => {
       LEFT JOIN card_choices cc ON cc.card_id = c.id
       WHERE c.deck_id = $1
       GROUP BY c.id
-      ORDER BY c.creation_time ASC`,
+      ORDER BY c.position ASC`,
       [req.params.deckId],
     );
 
@@ -361,7 +361,7 @@ app.get("/api/shared/:token", async (req, res) => {
 
     // Fetch cards with their choices
     const cardsResult = await pool.query(
-      `SELECT c.id, c.question, c.answer, c.card_type AS "cardType",
+      `SELECT c.id, c.question, c.answer, c.card_type AS "cardType", c.position,
         COALESCE(
           (SELECT json_agg(
             json_build_object('id', cc.id, 'choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
@@ -370,7 +370,7 @@ app.get("/api/shared/:token", async (req, res) => {
         ) AS choices
        FROM cards c
        WHERE c.deck_id = $1
-       ORDER BY c.creation_time ASC`,
+       ORDER BY c.position ASC`,
       [deck.id]
     );
 
@@ -434,13 +434,13 @@ app.post("/api/shared/:token/copy", requireAuth, async (req, res) => {
 
     // Fetch source cards with choices
     const cardsResult = await client.query(
-      `SELECT c.id, c.question, c.answer, c.card_type,
+      `SELECT c.id, c.question, c.answer, c.card_type, c.position,
         COALESCE(
           (SELECT json_agg(
             json_build_object('choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
           ) FROM card_choices cc WHERE cc.card_id = c.id), '[]'
         ) AS choices
-       FROM cards c WHERE c.deck_id = $1 ORDER BY c.creation_time ASC`,
+       FROM cards c WHERE c.deck_id = $1 ORDER BY c.position ASC`,
       [src.id]
     );
 
@@ -454,11 +454,11 @@ app.post("/api/shared/:token/copy", requireAuth, async (req, res) => {
     );
 
     // Copy cards and their choices
-    for (const card of cardsResult.rows) {
+    for (const [idx, card] of cardsResult.rows.entries()) {
       const newCardId = `card-${uuidv4()}`;
       await client.query(
-        `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, $5)`,
-        [newCardId, newDeckId, card.question, card.answer, card.card_type]
+        `INSERT INTO cards (id, deck_id, question, answer, card_type, position) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [newCardId, newDeckId, card.question, card.answer, card.card_type, card.position ?? idx]
       );
       for (const choice of (card.choices || [])) {
         await client.query(
@@ -492,8 +492,8 @@ app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
     }
 
     const cards = await pool.query(
-      `SELECT 
-        c.id, c.question, c.answer, c.card_type AS "cardType",
+      `SELECT
+        c.id, c.question, c.answer, c.card_type AS "cardType", c.position,
         COALESCE(
           json_agg(
             json_build_object('id', cc.id, 'choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
@@ -503,7 +503,7 @@ app.get("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
       LEFT JOIN card_choices cc ON cc.card_id = c.id
       WHERE c.deck_id = $1
       GROUP BY c.id
-      ORDER BY c.creation_time ASC`,
+      ORDER BY c.position ASC`,
       [req.params.deckId],
     );
 
@@ -545,10 +545,16 @@ app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
 
     await client.query('BEGIN');
 
+    const posResult = await client.query(
+      `SELECT COALESCE(MAX(position) + 1, 0) AS next_pos FROM cards WHERE deck_id = $1`,
+      [deckId]
+    );
+    const position = posResult.rows[0].next_pos;
+
     // 1. Insert the Card
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, $5)`,
-      [cardId, deckId, cleanQuestion, cleanAnswer, finalType]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type, position) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [cardId, deckId, cleanQuestion, cleanAnswer, finalType, position]
     );
 
     // 2. Insert choices if multiple choice (handling both underscore and hyphen naming)
@@ -573,16 +579,17 @@ app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
 
     // 3. Fetch the full object using json_build_object to guarantee key casing
     const finalCardResult = await client.query(`
-      SELECT 
-        c.id, 
-        c.question, 
-        c.answer, 
+      SELECT
+        c.id,
+        c.question,
+        c.answer,
         c.card_type AS "cardType",
+        c.position,
         COALESCE(
           (SELECT json_agg(
             json_build_object(
-              'id', cc.id, 
-              'choiceText', cc.choice_text, 
+              'id', cc.id,
+              'choiceText', cc.choice_text,
               'isCorrect', cc.is_correct
             ) ORDER BY cc.id ASC
           ) FROM card_choices cc WHERE cc.card_id = c.id), '[]'
@@ -656,7 +663,7 @@ const updateCardQuery = `
     // Re-fetch the full card with choices so the client gets consistent data
     const finalCard = await client.query(`
       SELECT
-        c.id, c.question, c.answer, c.card_type AS "cardType",
+        c.id, c.question, c.answer, c.card_type AS "cardType", c.position,
         COALESCE(
           (SELECT json_agg(
             json_build_object('id', cc.id, 'choiceText', cc.choice_text, 'isCorrect', cc.is_correct)
