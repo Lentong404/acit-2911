@@ -346,7 +346,7 @@ app.get("/api/shared/:token", async (req, res) => {
 
   try {
     const deckResult = await pool.query(
-      `SELECT d.id, d.title, d.category, d.creation_time, u.username AS creator
+      `SELECT d.id, d.title, d.category, d.creation_time, d.user_id, u.username AS creator
        FROM share_tokens s
        JOIN decks d ON d.id = s.deck_id
        JOIN users u ON u.id = s.created_by
@@ -386,6 +386,9 @@ app.get("/api/shared/:token", async (req, res) => {
     // Let the client know if the requesting user owns this deck
     const requestingUserId = req.session?.userId;
     const isOwnDeck = requestingUserId === deck.user_id;
+
+    // Strip user_id before sending — it's internal only
+    delete deck.user_id;
 
     res.json({ deck, cards, stats, isOwnDeck });
   } catch (err) {
