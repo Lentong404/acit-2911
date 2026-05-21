@@ -19,6 +19,7 @@ export async function exportDatabaseToJson(outputFilePath = path.join(import.met
               'question', card_sub.question,
               'answer', card_sub.answer,
               'cardType', card_sub.card_type,
+              'position', card_sub.position,
               'creationTime', card_sub.creation_time,
               'choices', COALESCE(
                 (SELECT json_agg(json_build_object(
@@ -29,7 +30,7 @@ export async function exportDatabaseToJson(outputFilePath = path.join(import.met
                 '[]'::json
               )
             )
-            ORDER BY card_sub.creation_time ASC
+            ORDER BY card_sub.position ASC
           ) FROM cards card_sub WHERE card_sub.deck_id = d.id),
           '[]'::json
         ) AS cards

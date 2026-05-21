@@ -25,6 +25,7 @@ CREATE TABLE cards (
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
   card_type TEXT NOT NULL DEFAULT 'basic',
+  position INTEGER NOT NULL DEFAULT 0,
   creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT valid_card_type CHECK (

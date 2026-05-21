@@ -41,12 +41,13 @@ export async function restoreDatabaseFromJson(inputFilePath = path.join(import.m
       );
 
       if (Array.isArray(deck.cards)) {
-        for (const card of deck.cards) {
+        for (const [idx, card] of deck.cards.entries()) {
           // Normalize true_false (legacy type) to multiple_choice
           const cardType = card.cardType === 'true_false' ? 'multiple_choice' : (card.cardType || 'basic');
+          const position = card.position ?? idx;
           await client.query(
-            `INSERT INTO cards (id, deck_id, question, answer, card_type, creation_time) VALUES ($1, $2, $3, $4, $5, $6)`,
-            [card.cardId, deck.deckId, card.question, card.answer, cardType, card.creationTime || new Date()]
+            `INSERT INTO cards (id, deck_id, question, answer, card_type, position, creation_time) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [card.cardId, deck.deckId, card.question, card.answer, cardType, position, card.creationTime || new Date()]
           );
 
           if (cardType === "multiple_choice" && Array.isArray(card.choices)) {
