@@ -10,6 +10,8 @@ let quizAnswered = false;
 let mcqFlipped = false;
 let quizScore = 0;
 let quizTotalAnswer = 0;
+let wrongCardIndices = [];
+let fullDeckCards = [];
 
 // prevents crash on loading decks
 function esc(str) {
@@ -29,13 +31,42 @@ function categorySplit(category) {
 let selectedDeckCategories = []
 
 function fillCategorySuggestion() {
-  const datalist = document.getElementById('category-options');
-  if (!datalist) return;
-
-  const categories = [...new Set(allDecks.flatMap(d => categorySplit(d.category)))];
-
-  datalist.innerHTML = categories.map(category => ` <option value="${esc(category)}"></option>`).join('');
+  // Called on modal open — just ensure suggestions are hidden initially
+  document.getElementById('category-suggestions')?.classList.add('hidden');
 }
+
+function showCategorySuggestions() {
+  const input = document.getElementById('deck-category-input');
+  const list  = document.getElementById('category-suggestions');
+  if (!input || !list) return;
+
+  const query = input.value.trim().toLowerCase();
+  const all   = [...new Set(allDecks.flatMap(d => categorySplit(d.category)))];
+  const matches = query
+    ? all.filter(c => c.includes(query) && !selectedDeckCategories.includes(c))
+    : all.filter(c => !selectedDeckCategories.includes(c));
+
+  if (!matches.length) { list.classList.add('hidden'); return; }
+
+  list.innerHTML = matches.map(c => `
+    <li onclick="selectCategorySuggestion('${esc(c)}')"
+      class="px-3.5 py-2 cursor-pointer hover:bg-stone-50 text-stone-700">${esc(c)}</li>`
+  ).join('');
+  list.classList.remove('hidden');
+}
+
+function selectCategorySuggestion(cat) {
+  document.getElementById('deck-category-input').value = cat;
+  document.getElementById('category-suggestions').classList.add('hidden');
+  addCatToDeck();
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#deck-modal')) {
+    document.getElementById('category-suggestions')?.classList.add('hidden');
+  }
+});
 
 function updateCategoryPreview() {
   const preview = document.getElementById('deck-category-preview');
@@ -298,8 +329,10 @@ async function openDeckQuiz(deckId) {
   quizMode = true;
   quizScore = 0;
   quizTotalAnswer = 0;
+  wrongCardIndices = [];
   document.getElementById('card-action-btns')?.classList.add('hidden');
   await openDeck(deckId);
+  fullDeckCards = [...cards]; // snapshot full deck after load
 }
 
 function renderStudyView() {
@@ -390,19 +423,34 @@ function renderQuizWidget(card) {
 
 function showQuizScorePopup() {
   const percent = Math.round((quizScore / quizTotalAnswer) * 100);
-
   document.getElementById('quiz-score-text').textContent =
-  `Final Score: ${quizScore}/${quizTotalAnswer} (${percent}%)`;
-
-  const popup = document.getElementById(`quiz-score-popup`);
-  popup.classList.remove(`hidden`)
-  popup.classList.add(`flex`)
+    `Final Score: ${quizScore}/${quizTotalAnswer} (${percent}%)`;
+  // Only show Retest Wrong if there are wrong answers
+  const retestWrongBtn = document.getElementById('retest-wrong-btn');
+  if (retestWrongBtn) retestWrongBtn.classList.toggle('hidden', wrongCardIndices.length === 0);
+  const popup = document.getElementById('quiz-score-popup');
+  popup.classList.remove('hidden');
+  popup.classList.add('flex');
 }
 
 function closeQuizScorePopup() {
-  const popup = document.getElementById(`quiz-score-popup`);
-  popup.classList.add(`hidden`)
-  popup.classList.remove(`flex`)
+  const popup = document.getElementById('quiz-score-popup');
+  popup.classList.add('hidden');
+  popup.classList.remove('flex');
+}
+
+function restartQuiz(wrongOnly = false) {
+  closeQuizScorePopup();
+  if (wrongOnly && wrongCardIndices.length > 0) {
+    cards = wrongCardIndices.map(i => fullDeckCards[i]);
+  } else {
+    cards = [...fullDeckCards]; // always restore full deck
+  }
+  quizScore = 0;
+  quizTotalAnswer = 0;
+  wrongCardIndices = [];
+  currentCardIndex = 0;
+  renderStudyView();
 }
 
 function answerQuiz(card, selectedIndex) {
@@ -421,6 +469,7 @@ function answerQuiz(card, selectedIndex) {
   });
   const correct = card.choices[selectedIndex].isCorrect;
   if (correct) quizScore++;
+  else wrongCardIndices.push(currentCardIndex);
   quizTotalAnswer++;
   const feedback = document.getElementById('quiz-feedback');
   feedback.classList.remove('hidden');
@@ -434,9 +483,8 @@ function answerQuiz(card, selectedIndex) {
   }
   playAnswerSFX(correct);
 
-  const totalQuiz = cards.filter(card => card.cardType === 'multiple_choice').length;
-  if (quizTotalAnswer === totalQuiz) {
-    showQuizScorePopup();
+  if (quizTotalAnswer === cards.length) {
+    setTimeout(() => showQuizScorePopup(), 450);
   }
 }
 
@@ -496,15 +544,15 @@ function flipCard() {
 const flipPreviewCard = flipCard;
 
 function selfAssess(correct) {
-  // Brief colour flash on the card, then advance
-  const inner = document.getElementById('flashcard-inner');
-  inner.style.transition = 'background-color 0.3s';
-  // Navigate to next card after brief pause
-  setTimeout(() => {
-    inner.style.transition = '';
-    navigateCards('next');
-  }, 400);
-  playRandomSFX();
+  if (correct) quizScore++;
+  else wrongCardIndices.push(currentCardIndex);
+  quizTotalAnswer++;
+  playAnswerSFX(correct);
+  if (quizTotalAnswer === cards.length) {
+    setTimeout(() => showQuizScorePopup(), 450);
+  } else {
+    setTimeout(() => navigateCards('next'), 400);
+  }
 }
 // function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
 // function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
@@ -1298,6 +1346,11 @@ async function sendAiPrompt() {
     document.getElementById('ai-stream-wrap').classList.add('hidden');
     document.getElementById('ai-carousel-phase').classList.remove('hidden');
     document.getElementById('ai-save-phase').classList.remove('hidden');
+
+    // Autofill new deck title with the prompt
+    const titleEl = document.getElementById('ai-new-deck-title');
+    if (titleEl && !titleEl.value) titleEl.value = prompt.slice(0, 50);
+
     aiRenderCarousel();
 
   } catch (e) {
