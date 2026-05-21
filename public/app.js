@@ -253,7 +253,7 @@ async function deleteDeck(id) {
 async function shareDeck(deckId) {
   try {
     const { token } = await api('POST', `/decks/${deckId}/share`);
-    const url = `${window.location.origin}/shared.html?token=${encodeURIComponent(token)}`;
+    const url = `${window.location.origin}/?token=${encodeURIComponent(token)}`;
     document.getElementById('share-url-input').value = url;
     openModal('share-modal');
     setTimeout(() => {
@@ -273,13 +273,12 @@ async function copyShareLink() {
   const input = document.getElementById('share-url-input');
   try {
     await navigator.clipboard.writeText(input.value);
-    showToast('Link copied ✓');
   } catch {
-    // Fallback for older browsers / non-HTTPS contexts
     input.select();
     document.execCommand('copy');
-    showToast('Link copied ✓');
   }
+  showToast('Link copied ✓');
+  closeShareModal();
 }
 
 //  Study 
@@ -328,20 +327,24 @@ function renderStudyView() {
   quizWidget?.classList.add('hidden');
 
   if (isMcq && quizMode && quizWidget) {
+    // MCQ in quiz mode — interactive quiz widget
     quizWidget.classList.remove('hidden');
     quizAnswered = false;
     renderQuizWidget(card);
   } else if (isMcq && mcqView) {
+    // MCQ in browse mode — flip card showing choices on back
     mcqView.classList.remove('hidden');
     mcqFlipped = false;
     mcqView.querySelector('.mcq-card')?.classList.remove('mcq-card--flipped');
     renderMcqView(card);
   } else {
+    // Basic card — always flip card, self-assess buttons shown on back in quiz mode
     flipWrapper?.classList.remove('hidden');
     document.getElementById('card-question').textContent = card.question;
     document.getElementById('card-answer').textContent = card.answer;
     isFlipped = false;
     document.getElementById('flashcard-inner').style.transform = 'rotateY(0deg)';
+    document.getElementById('self-assess-btns')?.classList.add('hidden');
   }
 }
 
@@ -368,7 +371,7 @@ function renderQuizWidget(card) {
   document.getElementById('quiz-question').textContent = card.question;
   const feedback = document.getElementById('quiz-feedback');
   feedback.className = 'quiz-feedback hidden';
-  feedback.textContent = '';
+  feedback.textContent = ' ';
   const choicesEl = document.getElementById('quiz-choices');
   choicesEl.innerHTML = '';
   const labels = 'ABCDE';
@@ -442,10 +445,29 @@ function playRandomSFX() {
 function flipCard() {
   isFlipped = !isFlipped;
   document.getElementById('flashcard-inner').style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  // Show self-assessment buttons on back only for basic cards in quiz mode
+  const card = cards[currentCardIndex];
+  const isBasic = !card || card.cardType === 'basic';
+  const assessBtns = document.getElementById('self-assess-btns');
+  if (assessBtns) {
+    assessBtns.classList.toggle('hidden', !(isFlipped && quizMode && isBasic));
+  }
   playRandomSFX();
 }
 
 const flipPreviewCard = flipCard;
+
+function selfAssess(correct) {
+  // Brief colour flash on the card, then advance
+  const inner = document.getElementById('flashcard-inner');
+  inner.style.transition = 'background-color 0.3s';
+  // Navigate to next card after brief pause
+  setTimeout(() => {
+    inner.style.transition = '';
+    navigateCards('next');
+  }, 400);
+  playRandomSFX();
+}
 // function prevCard() { if (currentCardIndex > 0) { currentCardIndex--; renderStudyView(); } playRandomSFX()}
 // function nextCard() { if (currentCardIndex < cards.length - 1) { currentCardIndex++; renderStudyView(); }  playRandomSFX()}
 
@@ -857,8 +879,24 @@ document.addEventListener(
   },
   {once: true}
 );
+//  Shared deck state — declared before init() so loadSharedDeck can access them
+let sharedDeckData = null;
+let sharedCardIndex = 0;
+let sharedFlipped = false;
+let sharedQuizAnswered = false;
+let sharedToken = null;
+let sharedIsLoggedIn = false;
+
 //  Init 
 async function init() {
+  // Check for shared deck token BEFORE any auth check —
+  // api() redirects on 401 so we must bypass it entirely for shared views
+  const sharedToken = new URLSearchParams(window.location.search).get('token');
+  if (sharedToken) {
+    await loadSharedDeck(sharedToken);
+    return;
+  }
+
   try {
     const me = await api('GET', '/auth/me');
     const userDisplay = document.getElementById('user-display');
@@ -883,7 +921,9 @@ async function doLogout() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadDecks();
+  // Don't load decks for shared deck views — unauthenticated users would get redirected
+  const isSharedView = new URLSearchParams(window.location.search).has('token');
+  if (!isSharedView) loadDecks();
   document.getElementById('add-choice-btn')?.addEventListener('click', () => addChoiceRow());
 });
 
@@ -1332,4 +1372,232 @@ async function saveAiCards() {
   } finally {
     btn.disabled = false;
   }
+}
+
+
+// ── Shared Deck ───────────────────────────────────────────────────
+
+async function loadSharedDeck(token) {
+  sharedToken = token;
+
+  // Show loading state immediately while we fetch
+  showView('shared-loading-view');
+
+  // Check if user is logged in using raw fetch — api() would redirect on 401
+  try {
+    const meRes = await fetch('/api/auth/me');
+    sharedIsLoggedIn = meRes.ok;
+  } catch { sharedIsLoggedIn = false; }
+
+  try {
+    const res = await fetch(`/api/shared/${encodeURIComponent(token)}`);
+    if (!res.ok) {
+      showSharedError();
+      return;
+    }
+    sharedDeckData = await res.json();
+
+    renderSharedLanding();
+    showView('shared-landing-view');
+  } catch (err) {
+    console.error('Failed to load shared deck:', err);
+    showSharedError();
+  }
+}
+
+function sharedGoHome() {
+  // Never include the token in the redirect — prevents auto-copy on login return
+  window.location.href = sharedIsLoggedIn ? '/' : '/login.html';
+}
+
+function showSharedError() {
+  document.getElementById('home-view').innerHTML = `
+    <div class="max-w-md mx-auto px-6 py-24 text-center">
+      <p class="text-stone-500 text-sm mb-4">This shared deck doesn't exist or has been removed.</p>
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Go home</a>
+    </div>`;
+  showView('home-view');
+}
+
+function renderSharedLanding() {
+  const { deck, cards, stats } = sharedDeckData;
+  console.log('[shared] renderSharedLanding', { deck, stats, cardCount: cards?.length });
+
+  document.getElementById('shared-deck-title').textContent = deck.title || 'Untitled Deck';
+  document.getElementById('shared-deck-creator').textContent = `Shared by @${deck.creator || 'unknown'}`;
+
+  // Configure Save button based on auth + ownership state
+  const saveBtn = document.getElementById('shared-save-btn');
+  if (saveBtn) {
+    if (sharedIsLoggedIn && sharedDeckData.isOwnDeck) {
+      // Owner — grey out, not interactive
+      saveBtn.disabled = true;
+      saveBtn.title = 'This is your deck';
+    } else {
+      // Logged out or logged in non-owner — fully active
+      saveBtn.disabled = false;
+      saveBtn.title = '';
+    }
+  }
+
+  // Stats pills
+  const statsEl = document.getElementById('shared-deck-stats');
+  const parts = [];
+  if (stats?.basic)           parts.push(`${stats.basic} basic`);
+  if (stats?.multiple_choice) parts.push(`${stats.multiple_choice} MCQ`);
+  const total = stats?.total ?? cards?.length ?? 0;
+  statsEl.innerHTML = [`${total} card${total !== 1 ? 's' : ''}`, ...parts]
+    .map(p => `<span class="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">${p}</span>`)
+    .join('');
+
+  // Category tags
+  const cats = categorySplit(deck.category || '');
+  const catsEl = document.getElementById('shared-deck-categories');
+  catsEl.innerHTML = cats.length
+    ? cats.map(c => `<span class="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">${esc(c)}</span>`).join('')
+    : '';
+}
+
+async function sharedSaveCopy() {
+  if (!sharedIsLoggedIn) {
+    // Redirect to login with return URL so they land back on this shared deck
+    window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.href)}`;
+    return;
+  }
+  try {
+    const res = await fetch(`/api/shared/${encodeURIComponent(sharedToken)}/copy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || 'Copy failed');
+    }
+    // Mark as own deck if server says so (shouldn't reach here normally)
+    showToast('Deck saved to your account ✓');
+    // Strip token from URL and go to home
+    setTimeout(() => { window.location.href = '/'; }, 1200);
+  } catch (err) {
+    showToast(err.message || 'Failed to save deck');
+  }
+}
+
+function sharedStartQuiz() {
+  const { deck, cards } = sharedDeckData;
+  sharedCardIndex = 0;
+  sharedFlipped = false;
+  document.getElementById('shared-quiz-title').textContent = deck.title;
+  sharedRenderCard();
+  showView('shared-quiz-view');
+}
+
+function sharedRenderCard() {
+  const { cards } = sharedDeckData;
+  if (!cards.length) return;
+
+  const card = cards[sharedCardIndex];
+  const isMcq = card.cardType === 'multiple_choice';
+
+  document.getElementById('shared-quiz-counter').textContent =
+    `Card ${sharedCardIndex + 1} of ${cards.length}`;
+  document.getElementById('shared-progress-fill').style.width =
+    `${((sharedCardIndex + 1) / cards.length) * 100}%`;
+  document.getElementById('shared-prev-btn').disabled = sharedCardIndex === 0;
+  document.getElementById('shared-next-btn').disabled = sharedCardIndex === cards.length - 1;
+
+  const flipWrapper = document.getElementById('shared-flip-wrapper');
+  const quizWidget  = document.getElementById('shared-quiz-widget');
+
+  if (isMcq) {
+    flipWrapper.classList.add('hidden');
+    quizWidget.classList.remove('hidden');
+    sharedQuizAnswered = false;
+    sharedRenderQuiz(card);
+  } else {
+    quizWidget.classList.add('hidden');
+    flipWrapper.classList.remove('hidden');
+    document.getElementById('shared-card-question').textContent = card.question;
+    document.getElementById('shared-card-answer').textContent = card.answer;
+    // Snap to question side
+    const inner = document.getElementById('shared-flashcard-inner');
+    inner.style.transition = 'none';
+    inner.style.transform = 'rotateY(0deg)';
+    sharedFlipped = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => { inner.style.transition = ''; }));
+  }
+}
+
+function sharedFlipCard() {
+  sharedFlipped = !sharedFlipped;
+  document.getElementById('shared-flashcard-inner').style.transform =
+    sharedFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  playRandomSFX();
+}
+
+function sharedSelfAssess(correct) {
+  // Navigate to next card after brief pause
+  setTimeout(() => sharedNavigate('next'), 400);
+  playRandomSFX();
+}
+
+function sharedRenderQuiz(card) {
+  document.getElementById('shared-quiz-question').textContent = card.question;
+  const feedback = document.getElementById('shared-quiz-feedback');
+  feedback.className = 'quiz-feedback hidden';
+  feedback.textContent = ' ';
+  const choicesEl = document.getElementById('shared-quiz-choices');
+  choicesEl.innerHTML = '';
+  const labels = 'ABCDE';
+  card.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-choice-btn';
+    // Display true/false with title case
+    const display = ch.choiceText === 'true' ? 'True' : ch.choiceText === 'false' ? 'False' : esc(ch.choiceText);
+    btn.innerHTML = `<span class="quiz-choice-btn__letter">${labels[i] ?? i + 1}</span>${display}`;
+    btn.onclick = () => sharedAnswerQuiz(card, i);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function sharedAnswerQuiz(card, selectedIndex) {
+  if (sharedQuizAnswered) return;
+  sharedQuizAnswered = true;
+  const buttons = document.querySelectorAll('#shared-quiz-choices .quiz-choice-btn');
+  buttons.forEach((btn, i) => {
+    btn.onclick = null;
+    if (card.choices[i].isCorrect) {
+      btn.classList.add('quiz-choice-btn--correct');
+    } else if (i === selectedIndex) {
+      btn.classList.add('quiz-choice-btn--wrong');
+    } else {
+      btn.classList.add('quiz-choice-btn--dimmed');
+    }
+  });
+  const correct = card.choices[selectedIndex].isCorrect;
+  const feedback = document.getElementById('shared-quiz-feedback');
+  feedback.classList.remove('hidden');
+  if (correct) {
+    feedback.textContent = '✓ Correct!';
+    feedback.className = 'quiz-feedback quiz-feedback--correct';
+  } else {
+    const correctChoice = card.choices.find(c => c.isCorrect);
+    feedback.textContent = `✗ The answer was ${correctChoice ? esc(correctChoice.choiceText) : '—'}`;
+    feedback.className = 'quiz-feedback quiz-feedback--wrong';
+  }
+  playRandomSFX();
+}
+
+function sharedNavigate(direction) {
+  const { cards } = sharedDeckData;
+  const inner = document.getElementById('shared-flashcard-inner');
+  if (inner) {
+    inner.style.transition = 'none';
+    inner.style.transform = 'rotateY(0deg)';
+  }
+  sharedFlipped = false;
+  if (direction === 'next' && sharedCardIndex < cards.length - 1) sharedCardIndex++;
+  if (direction === 'prev' && sharedCardIndex > 0) sharedCardIndex--;
+  sharedRenderCard();
+  playRandomSFX();
+  if (inner) requestAnimationFrame(() => requestAnimationFrame(() => { inner.style.transition = ''; }));
 }

@@ -28,7 +28,7 @@ CREATE TABLE cards (
   creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT valid_card_type CHECK (
-    card_type IN ('basic', 'multiple_choice', 'true_false')
+    card_type IN ('basic', 'multiple_choice')
   )
 );
 
